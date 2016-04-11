@@ -15,12 +15,12 @@ pred movement(direction,position,position).
 %% spec: vero sse PositionEnd è la nuova posizione dopo essersi mossi da
 %% 	 PositionStart verso la direzione Direction
 
-pred game_area(position).
-%% game_area(?Position) SEMIDET
+pred is_game_area(position).
+%% is_game_area(?Position) SEMIDET
 %% Spec: vero sse Position indica un'area di gioco percorribile
 
-pred obstacle(position).
-%% obstacle(?Position) SEMIDET
+pred is_obstacle(position).
+%% is_obstacle(?Position) SEMIDET
 %% Spec: vero sse Position indica un ostacolo non percorribile
 
 pred enemy(number,position).
@@ -30,7 +30,7 @@ pred enemy(number,position).
 :-dynamic(enemy(Int,P)).
 
 pred soldier(position).
-%% player(?Position) SEMIDET
+%% soldier(?Position) SEMIDET
 %% Spec: vero see Position indica la posizione del giocatore
 
 :-dynamic(soldier(P)).
@@ -41,7 +41,7 @@ pred prisoner(position).
 
 pred sight(position).	
 %% sight(?Position) SEMIDET
-%% Spec: vero sse Position indica una zona tenuta sotto sorveglianza
+%% Spec: vero sse Position indica una zona tenuta sotto sorveglianza --> possibile aggiunta di tipo sentinel per distinguere le zone coperte dalle varie sentinelle
 
 :-dynamic(sight(P)).
 
@@ -51,7 +51,7 @@ pred enemy_path(integer,position,direction).
 %% mentre Direction è la sua direzione
 %% NOTA: si potrebbe creare un tipo "sentinel" per generare le sentinelle e 
 %% aggiungere al predicato enemy_path un termine di tipo sentinel che indica
-%% a quale sentinella appartiene il percorso
+%% a quale sentinella appartiene il percorso --> sembra ragionevole
 
 :-dynamic(enemy_path(Int,P,D)).
 
@@ -62,3 +62,5 @@ pred height(integer).
 pred size(integer).
 %% size(?Size) SEMIDET
 %% Spec: vero sse Size è la larghezza della mappa
+
+--> possibile definire un tipo game_map per raggruppare i due precedenti
