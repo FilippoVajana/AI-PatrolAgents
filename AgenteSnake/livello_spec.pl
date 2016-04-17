@@ -8,8 +8,8 @@ type [size(number,number)]:size.
      %	con righe da 0 a Righe-1 e colonne da 0 a Colonne-1
 type [p(number,number)]:punto.
      %  ogni punto indica un'area quadrata di "terreno"
-type [o, p, ' ']:terreno.
-     %   diversi tipi di terreno: o-stacoli, p-alude, ' ' libero
+type [ostacolo]:terreno.
+     %   diversi tipi di terreno: ostacoli, p-alude, ' ' libero
 type [d(number,number)]: direzione.
      %  d(V,O) con V / O spostamento verticale /orizz. unitario
      %	es.:   d(-1,0)  mi sposto in verticale di -1 punto
@@ -56,6 +56,11 @@ pred distanza_quadretti(punto, punto, number).
 pred punto_area(punto, area).
   %  punto_area(?P,+A) nondet
   %    P si trova nell'area A
+
+pred area_sentinella(punto, sentinella).
+  % area_sentinella(?P,+S) nondet
+  % P si trova nell'area sorvegliata dalla sentinella S
+
 pred punto_mappa(punto, size).
   %  punto_mappa(?P,+S) nondet
   %  P è un punto in una mappa di dimensione S
