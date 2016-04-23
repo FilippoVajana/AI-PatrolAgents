@@ -47,7 +47,14 @@ distanza_quadretti(p(X1,Y1), p(X2,Y2), D) :-
 
 punto_area(p(I,J),area(p(I0,J0),p(I1,J1))) :-
 	between(I0,I1,I),
-	between(J0,J1,J).
+	between(J1,J0,J).
+
+area_sentinella(p(I,J), area(p(X1,Y1),p(X2,Y2))) :-
+	X1 is I,
+	Y1 is J + 1,
+	X2 is I + 4,
+	Y2 is J - 1.
+	
 
 punto_mappa(p(I,J),size(R,C)) :-
 	Rmax is R-1,

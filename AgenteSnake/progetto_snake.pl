@@ -38,12 +38,12 @@ gen [mappa(number)]: info_inizio.
 gen [st(punto, punto, tempo)]:stato.
     % st(P,G): il soldato si trova in P e deve andare a G
     % NOTA: possibili aggiunte di termini allo stato
-         % tempo: perch� le posizioni dei nemici cambiano a seconda del tempo
-         % visibilit�: da usare se si implementa la possibilit� di nascondersi
+         % tempo: perché le posizioni dei nemici cambiano a seconda del tempo
+         % visibilità: da usare se si implementa la possibilità di nascondersi
 
 /******   Le decisioni dell'agente  */
 gen [ % piani
-	 vado(punto, punto),
+	  vado(punto, punto),
        % decisione vado(P,G): cerco un piano per andare da P a G
     % mi_nascondo(punto),
        % decisione mi_nascondo(P): cerco un piano per nascondermi nel punto P
@@ -72,8 +72,8 @@ clear_knowledge :-
 	retractall(assunto(_)),
 	retractall(conosce(_)).
 
-% specificato in vai_if; l'informazione iniziale è qui
-% la mappa che vogliamo usare; se già caricata non viene
+% specificato in vai_if; l'informazione iniziale Ã¨ qui
+% la mappa che vogliamo usare; se giÃ  caricata non viene
 % azzerata conoscenza dinamica dell'agente, che di volta in volta
 % impara; se si passa a nuova mappa, l'agente parte con
 % conoscenza dinamica nulla;  usiamo  ultima/1 per ricordare
@@ -96,10 +96,10 @@ stato_iniziale(st(S0,P), mappa(I)) :-
 
 /****  B: le decisioni *******/
 
-% fine è specificato in vai_if; la decisione finale è termino(...)
+% fine Ã¨ specificato in vai_if; la decisione finale Ã¨ termino(...)
 fine(termino(_)).
 
-% decidi è specificato in vai_if;  lo implemento come segue
+% decidi Ã¨ specificato in vai_if;  lo implemento come segue
 % 1) sono a inizio storia con stato st(S,P);
 decidi(st(Soldato,Prigioniero),
        [inizio_storia(_I)],
@@ -111,17 +111,17 @@ decidi(st(Soldato,Prigioniero),
        [eseguita(Dec)|_],
        Decisione)
 :- Soldato = Prigioniero ->
-   % se la mia posizione � il goal, termino
+   % se la mia posizione è il goal, termino
    Decisione = termino(eseguita(Dec))
    ;
    %  altrimenti cerco un piano per andare da Soldato a Prigioniero
    Decisione = vado(Soldato, Prigioniero).
 
-% 3) nella ricerca del piano ho verificato che il prigioniero �
-% irraggiungibile oppure non si pu� raggiungere evitando le guardie;
+% 3) nella ricerca del piano ho verificato che il prigioniero è
+% irraggiungibile oppure non si può raggiungere evitando le guardie;
 decidi(_ST,
        [impossibile(vado(Soldato,Prigioniero))|_],
-       % termino per impossibilit� di raggiungere il goal
+       % termino per impossibilità di raggiungere il goal
        termino(impossibile(vado(Soldato,Prigioniero)))).
 
 % 4A) sono stato visto da una guardia mentre tentavo di raggiungiere il
@@ -139,7 +139,12 @@ decidi(st(_Soldato,_),
 %%	NOTA: da implementare
 pred avvistato(sentinella).
 %%	avvistato(-S) SEMIDET
-%%	Spec: vero sse S � la sentinella che ha avvistato l'agente
+%%	Spec: vero sse S è la sentinella che ha avvistato l'agente
+
+avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
+  sentinella_dove(p(SENTX,SENTY),_,NAME) %% NOTA da implementare
+  area_sentinella(p(SENTX,SENTY),NAME, area(p(X1,Y1),p(X2,Y2))),
+  punto_area(p(SX,SY),area(p(X1,Y1),p(X2,Y2))).
 
 /**** AZIONI ****/
 
@@ -149,7 +154,7 @@ azione(termino(_)).
 
 % Specifica in vai_if.pl
 esegui_azione(st(S0,P),_Storia,avanzo(S1),st(S1,P)) :-
-	game_area(S1),  % indica che non contiene ostacoli n� npc
+	game_area(S1),  % indica che non contiene ostacoli né npc
 	retract(soldato(S0)),
 	assert(soldato(S1)),
 	avanza_tempo.  % predicato che incrementa il valore dell'orologio
@@ -163,13 +168,13 @@ piano(_Stato,_Storia,vado(S,P),Piano) :-
 
 pred cerca_un_piano(punto,punto,list(decisione)).
 %%	cerca_un_piano(+S,+P,-DecList) SEMIDET
-%%	Spec: vero sse DecList � una lista di decisioni (azioni) che
+%%	Spec: vero sse DecList è una lista di decisioni (azioni) che
 %	porta da S a P. Il predicato fallisce se non esiste una lista di
 %	decisioni possibili.
 
 pred current_goal(punto).
 %%	current_goal(?G) SEMIDET
-%%	Spec: vero sse G � il goal da usare nella libreria mr.pl
+%%	Spec: vero sse G è il goal da usare nella libreria mr.pl
 :-dynamic(current_goal/1).
 
 cerca_un_piano(P,G,Piano) :-
@@ -184,7 +189,7 @@ type [nc(punto,list(punto),number)]:nodo.
 
 pred estrai_piano(nodo, list(decisione)).
 %%	estrai_piano(+Sol,-Piano) DET
-%%	Spec: vero sse Piano � la sequenza di avanzamenti che percorre
+%%	Spec: vero sse Piano è la sequenza di avanzamenti che percorre
 %	la sequenza di posizioni calcolata nella soluzione Sol
 estrai_piano(nc(G,RevPath,_C),Piano) :-
 	reverse([G|RevPath],[_Start|Path]),
@@ -192,7 +197,7 @@ estrai_piano(nc(G,RevPath,_C),Piano) :-
 
 pred path2moves(list(punto),list(decisione)).
 %%	path2moves(+PList,-DList) DET
-%%	Spec: vero sse DList � una lista di decisioni che rappresentano
+%%	Spec: vero sse DList è una lista di decisioni che rappresentano
 %	il percorso di PList
 path2moves([P|Path],[avanzo(P)|MovList]) :-
 	path2moves(Path,MovList).
