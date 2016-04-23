@@ -243,8 +243,14 @@ points2states(Punti,Prigioniero,TempoVicino,Stati) :-
 	converti_lista(NuoviPunti,Prigioniero,TempoVicino,Stati).
 
 costo(st(Soldato,Prigioniero),st(Soldato2,Prigioniero),2) :-
-	Soldato \= Soldato2.
+	Soldato \= Soldato2, !.
 costo(st(Soldato,Prigioniero),st(Soldato,Prigioniero),1).
 %%	Spostarsi costa 2, aspettare costa 1.
+
+
+h(st(Soldato,Prigioniero,_Orario),H) :-
+	distanza_euclidea(Soldato,Prigioniero,H).
+%%	L'euristica usata è per ora la distanza euclidea tra Soldato e
+%	Prigioniero.
 
 

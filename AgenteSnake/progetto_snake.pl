@@ -60,7 +60,7 @@ gen [ % piani
      termino(evento)
     ]: decisione.
 
-gen [ronda(sentinella,punto,direzione,integer)]: assumibile.
+gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
 % NOTA: forse anche guardia/2 dovrebbe essere assumibile, ma in teoria basta
 %  assumere il pattern
 
@@ -200,6 +200,8 @@ path2moves([P,P|Path],[aspetto|MovList]) :-
 	path2moves(Path,MovList).
 pathmoves([],[]).
 
+
+
 /**** IMPLEMENTAZIONE DEI PREDICATI RICHIESTI DA SEARCH_IF.PL ****/
 trovato(st(P,P,_)).
 %%	La ricerca si ferma quando la posizione del soldato coincide con
@@ -252,3 +254,34 @@ h(st(Soldato,Prigioniero,_Orario),H) :-
 	distanza_euclidea(Soldato,Prigioniero,H).
 %%	L'euristica usata è per ora la distanza euclidea tra Soldato e
 %	Prigioniero.
+
+
+/**** LA TERRIBILE PARTE DI RAGIONAMENTO ****/
+
+aggiorna_conoscenza(st(S,P,T),_H,inizio_storia(_Avvio)) :-
+	% in teoria a inizio storia l'agente dovrebbe assumere i percorsi delle
+	% sentinelle
+	pensa(/* non so cosa mettere :-) */).
+aggiorna_conoscenza(st(S,P,T),_H,transizione(S1,Dec,S2)) :-
+	% il tempo è avanzato
+	clock(Ora),
+	assunto(ronda(Sentinella,PosizioneAssunta,DirezioneAssunta,Ora)),
+	sentinella(Sentinella,PosizioneEffettiva,DirezioneEffettiva),
+	impara(ronda(Sentinella,PosizioneEffettiva,DirezioneEffettiva,Ora)),
+	% se ha sbagliato cancella le assunzioni e ne fa di nuove
+	not(PosizioneAssunta is PosizioneEffettiva,
+	    DirezioneAssunta is DirezioneEffettiva) ->
+	        bagof(O,(assunto(ronda(Sentinella,_,_,O)),O >= Ora),O2),
+	        forall(member(O3,O2),retract(assunto(ronda(Sentinella,_,_,O3)))).
+% NOTA: indagare meglio su questo predicato
+
+assumibile(ronda(_,_,_,_)).
+% Il soldato può ipotizzare una ronda per le sentinelle
+
+contraria(ronda(Sentinella,Pos,Dir,Ora),ronda(Sentinella,PosDiv,DirDiv,Ora)) :-
+	Pos \= PosDiv;
+	Dir \= DirDiv.
+% una sentinella non può trovarsi in due punti nello stesso momento
+contraria(ronda(Sentinella,P1,_D1,Ora),ronda(Sentinella,P2,_D2,OraSucc)) :-
+	not(OraSucc is Ora + 1);
+	not(next(P1,P2)).
