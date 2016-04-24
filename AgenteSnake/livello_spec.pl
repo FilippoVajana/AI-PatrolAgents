@@ -18,12 +18,15 @@ type [n,s,e,o,ne,no,se,so]:punto_cardinale.
 type [area(punto,punto)]:area.
      %  area(P1,P2): area rettangolare con vertice nord-est P1
      %	e vertice sud-ovest P2
-
+type [punto_cardinale]:direzione_sguardo.
+    % indica la direzione in cui il soggeto osserva
+type [punto,direzione,direzione_sguardo,nome]:sentinella.
+    % descrive una sentinella
 
 
 pred direzioni(punto_cardinale, direzione).
   %   direzioni(?C, ?D) nondet
-  %   D Ë la direzione corrispondente al punto cardinale C
+  %   D √® la direzione corrispondente al punto cardinale C
 pred next_dirs(direzione, direzione, direzione).
   %   next_dirs(?D1,?D2,?D3) nondet
   %   D2 e D3 sono le direzioni "prossime" di D1
@@ -31,14 +34,14 @@ pred next_dirs(direzione, direzione, direzione).
   %   sono d(1,-1) (sud-est) e d(1,1) (sud-ovest)
 pred next(punto, direzione, punto, number).
   %   next(+P1, +D, ?P2, ?L)  semidet
-  %   P2 Ë il prossimo punto in direzione D da P1
-  %   L Ë la distanza fra P1 e P2
+  %   P2 √® il prossimo punto in direzione D da P1
+  %   L √® la distanza fra P1 e P2
 pred next(punto, punto).
   %   next(+P1, ?P2)  semidet
-  %   P2 Ë adiacente a P1
+  %   P2 √® adiacente a P1
 pred adiacenti(punto, list(punto)).
   %   adiacenti(+P, -L)	det
-  %   L Ë la lista dei punti adiacenti a P
+  %   L √® la lista dei punti adiacenti a P
 pred verso(punto, punto, direzione).
   %  verso(+P1,+P2,?D) semidet
   %  P2 si trova in direzione D rispetto a P1
@@ -47,32 +50,38 @@ pred verso(punto, punto, direzione).
 pred distanza_euclidea(punto, punto, number).
   %  distanza_euclidea(+P1, +P1, -D) det
   %  D = distanza_euclidea(P1,P2),
-  %  usando il lato quadretto come unit‡ di misura
+  %  usando il lato quadretto come unit√† di misura
 pred distanza_quadretti(punto, punto, number).
   %  distanza_quadretti(+P1, +P1, -D) det
   %  D = lunghezza minimo percorso di un agente che si muove
   %  solo in orizzontale, verticale o diagonale,
-  %  usando il lato quadretto come unit‡ di misura
+  %  usando il lato quadretto come unit√† di misura
 pred punto_area(punto, area).
   %  punto_area(?P,+A) nondet
   %    P si trova nell'area A
 
-pred area_sentinella(punto, sentinella).
-  % area_sentinella(?P,+S) nondet
-  % P si trova nell'area sorvegliata dalla sentinella S
+%%  PREDICATI RELATIVI A SENTINELLA  %%
+
+pred area_sentinella(sentinella, area).
+  % area_sentinella(+S,-A) nondet
+  % ritorna l'area coperta dalla sentinella S
+pred sentinella_dove(sentinella, punto).
+    %sentinella_dove(+S,-P) det
+    %ritorna le coordinate della sentinella S
+
 
 pred punto_mappa(punto, size).
   %  punto_mappa(?P,+S) nondet
-  %  P Ë un punto in una mappa di dimensione S
+  %  P √® un punto in una mappa di dimensione S
 pred qualita(terreno, number).
   %  qualita(+T, -K) det.
-  %  K = coefficiente difficolt‡ attraversamento del terreno T
+  %  K = coefficiente difficolt√† attraversamento del terreno T
 
 pred carica_mappa.
   %  comando per caricare la mappa corrente
 pred mostra_mappa(any, size).
   %  comando:  mostra_mappa(+M, +S)
-  %  precondizione:   M Ë un predicato che rappresenta una
+  %  precondizione:   M √® un predicato che rappresenta una
   %  mappa di dimensione Size
   %  post:   la mappa rappresentata da M viene visualizzata
 pred mostra_mappa(any).
@@ -81,7 +90,7 @@ pred mostra_mappa(any).
 %   DINAMICI, memorizzano la mappa, la posizione attuale
 %   dell'agente, la posizione del goal
 pred map(punto,terreno).
-  %  map(?P,?T) semidet,dynamic: P Ë un punto della mappa caricata
+  %  map(?P,?T) semidet,dynamic: P √® un punto della mappa caricata
   %  con tipo di terreno T
 pred map_size(size).
   %  map_size(size(?R,?C)) semidet, dynamic:  la mappa caricata
@@ -89,7 +98,7 @@ pred map_size(size).
 pred position(punto).
   %  position(?P): l'agente si trova nella mappa in posizione P
 pred goal(punto).
-  %  gola(?P): il goal nella mappa Ë in posizione P
+  %  gola(?P): il goal nella mappa √® in posizione P
 
 %%  PREDICATI GREZZI da escludere dal type checking:
 
