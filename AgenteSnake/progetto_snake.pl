@@ -126,12 +126,12 @@ decidi(_ST,
 
 % 4A) sono stato visto da una guardia mentre tentavo di raggiungiere il
 % prigioniero;
-decidi(st(_Soldato,_),
+decidi(st(_Soldato,_,_),
        [fallita(vado(S,P),[avanzo(_)|_])|_],
        termino(fallita(vado(S,P))))
 :- avvistato(_Sentinella).
 % 4B) sono stato visto da una guardia mentre aspettavo in un punto.
-decidi(st(_Soldato,_),
+decidi(st(_Soldato,_,_),
        [fallita(vado(S,P),[aspetto|_])|_],
        termino(fallita(vado(S,P))))
 :- avvistato(_Sentinella).
@@ -139,10 +139,10 @@ decidi(st(_Soldato,_),
 %%	NOTA: da implementare
 pred avvistato(sentinella).
 %%	avvistato(-S) SEMIDET
-%%	Spec: vero sse S Ã¨ la sentinella che ha avvistato l'agente
+%%	Spec: vero sse S e' la sentinella che ha avvistato l'agente
 
 avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
-  sentinella_dove(p(SENTX,SENTY),_,NAME) %% NOTA da implementare
+  sentinella_dove(p(SENTX,SENTY),_,NAME), %% NOTA da implementare
   area_sentinella(p(SENTX,SENTY),NAME, area(p(X1,Y1),p(X2,Y2))),
   punto_area(p(SX,SY),area(p(X1,Y1),p(X2,Y2))).
 
@@ -153,13 +153,17 @@ azione(aspetto).
 azione(termino(_)).
 
 % Specifica in vai_if.pl
-esegui_azione(st(S0,P),_Storia,avanzo(S1),st(S1,P)) :-
-	game_area(S1),  % indica che non contiene ostacoli nÃ© npc
+esegui_azione(st(S0,P,T),_Storia,avanzo(S1),st(S1,P,TNext)) :-
+	game_area(S1),  % indica che non contiene ostacoli né npc
 	retract(soldato(S0)),
 	assert(soldato(S1)),
-	avanza_tempo.  % predicato che incrementa il valore dell'orologio
-esegui_azione(st(S0,P),_Storia,aspetto,st(S0,P)) :-
-	avanza_tempo.  % cambia solo il valore dell'orologio
+	clock(T),
+	avanza_tempo,  % predicato che incrementa il valore dell'orologio
+	clock(TNext).
+esegui_azione(st(S0,P,T),_Storia,aspetto,st(S0,P,TNext)) :-
+	clock(T),
+	avanza_tempo,  % cambia solo il valore dell'orologio
+        clock(TNext).
 
 
 /**** PIANIFICAZIONI ****/
@@ -168,13 +172,13 @@ piano(_Stato,_Storia,vado(S,P),Piano) :-
 
 pred cerca_un_piano(punto,punto,list(decisione)).
 %%	cerca_un_piano(+S,+P,-DecList) SEMIDET
-%%	Spec: vero sse DecList Ã¨ una lista di decisioni (azioni) che
+%%	Spec: vero sse DecList e' una lista di decisioni (azioni) che
 %	porta da S a P. Il predicato fallisce se non esiste una lista di
 %	decisioni possibili.
 
 pred current_goal(punto).
 %%	current_goal(?G) SEMIDET
-%%	Spec: vero sse G Ã¨ il goal da usare nella libreria mr.pl
+%%	Spec: vero sse G e' il goal da usare nella libreria mr.pl
 :-dynamic(current_goal/1).
 
 cerca_un_piano(P,G,Piano) :-
@@ -183,7 +187,7 @@ cerca_un_piano(P,G,Piano) :-
 	solve(P,Soluzione,=(G)),
 	estrai_piano(Soluzione,Piano).
 
-% NOTA: leggere bene la libreria di ricerca per sfruttarla al meglio
+
 type [nc(punto,list(punto),number)]:nodo.
 % importo tipo nodo per search
 
@@ -197,13 +201,13 @@ estrai_piano(nc(G,RevPath,_C),Piano) :-
 
 pred path2moves(list(punto),list(decisione)).
 %%	path2moves(+PList,-DList) DET
-%%	Spec: vero sse DList Ã¨ una lista di decisioni che rappresentano
+%%	Spec: vero sse DList e' una lista di decisioni che rappresentano
 %	il percorso di PList
+path2moves([],[]) :- !.
+path2moves([P,P|Path],[aspetto|MovList]) :-
+	path2moves(Path,MovList), !.
 path2moves([P|Path],[avanzo(P)|MovList]) :-
 	path2moves(Path,MovList).
-path2moves([P,P|Path],[aspetto|MovList]) :-
-	path2moves(Path,MovList).
-pathmoves([],[]).
 
 
 
@@ -212,15 +216,30 @@ trovato(st(P,P,_)).
 %%	La ricerca si ferma quando la posizione del soldato coincide con
 %	quella del prigioniero.
 
-vicini(st(Soldato1,Prigioniero,Tempo),ListaVicini) :-
-	adiacenti(Soldato1,ListaAdiacenti),
+vicini(st(Soldato,Prigioniero,Tempo),ListaVicini) :-
+	adiacenti(Soldato,ListaAdiacenti),
 	TempoVicino is Tempo + 1,
-	points2states(ListaAdiacenti,Prigioniero,TempoVicino,ListaVicini),
+	points2states(st(Soldato,Prigioniero,Tempo),
+		      ListaAdiacenti,Prigioniero,TempoVicino,
+		      [Soldato | ListaVicini]).
+
+pred pensa_avvistato(stato,sentinella,punto).
+%%	pensa_avvistato(+St,-Se,-P) SEMIDET
+%%	Spec: vero sse l'agente nello stato St, secondo le sue
+%	assunzioni, crede che sarà visto dalla sentinella Se alla
+%	posizione P.
+
+pensa_avvistato(st(Soldato,_P,Tempo),Sentinella,PosizioneSentinella) :-
+	pensa(ronda(Sentinella,PosizioneSentinella,_,Tempo),_),
+	area_sentinella(PosizioneSentinella,Area),
+	punto_area(Soldato,Area).
+
 
 pred elimina_non_validi(list(punto),list(punto)).
 %%	elimina_non_validi(+ListaPunti,+NuovaLista) DET
 %%	Spec: vero sse NuovaLista contiene solo i punti di ListaPunti a
-%	cui corrisponde un'area percorribile.
+%	cui corrisponde un'area percorribile e in cui l'agente non pensa
+%	di poter essere avvistato.
 
 pred converti_lista(list(punto),punto,tempo,list(stato)).
 %%	converti_lista(+ListaPunti,+Prigioniero,+TempoVicino,-ListaStati)
@@ -229,6 +248,17 @@ pred converti_lista(list(punto),punto,tempo,list(stato)).
 %	prigioniero e serve a costruire gli stati. Stessa cosa per
 %	TempoVicino che è l'orario del nodo vicino.
 
+pred elimina_avvistati(list(stato),list(stato)).
+%%	elimina_avvistati(+ListaStati,-ListaStatiSicuri) DET
+%%	Spec: vero sse elimina_avvistati elimina da ListaStati tutti gli
+%	stati in cui l'agente pensa di venire avvistato.
+
+pred points2states(list(punto),punto,tempo,list(stato)).
+%%	points2states(+ListaPunti,+Prigioniero,+Tempo,-ListaStati) DET
+%%	Spec: vero sse unisce le chiamate a elimina_non_validi,
+%%	converti_lista e elimina_avvistati in un solo predicato.
+
+
 elimina_non_validi([],[]) :- !.
 elimina_non_validi([Testa | Coda],[Testa | NuovaLista]) :-
 	game_area(Testa), !,
@@ -236,18 +266,26 @@ elimina_non_validi([Testa | Coda],[Testa | NuovaLista]) :-
 elimina_non_validi([_Testa | Coda],NuovaLista) :-
 	elimina_non_validi(Coda,NuovaLista).
 
+
 converti_lista([],_,_,[]) :- !.
 converti_lista([S | Coda],P,TempoVicino,[st(S,P,TempoVicino) | StatiCoda]) :-
 	converti_lista(Coda,P,TempoVicino,StatiCoda).
 
-pred points2states(list(punto),punto,tempo,list(stato)).
-%%	points2states(+ListaPunti,+Prigioniero,+TempoVicino,-ListaStati)
-%	DET
-%%      Spec: vero sse unisce le chiamate a elimina_non_validi e
-%	converti_lista in un solo predicato.
-points2states(Punti,Prigioniero,TempoVicino,Stati) :-
-	elimina_non_validi(Punti,NuoviPunti),
-	converti_lista(NuoviPunti,Prigioniero,TempoVicino,Stati).
+
+elimina_avvistati([],[]) :- !.
+elimina_avvistati([Testa | Coda], [Testa | NuovaLista]) :-
+	not(pensa_avvistato(Testa,_,_)), !,
+	elimina_avvistati(Coda,NuovaLista).
+elimina_avvistati([_ | Coda], NuovaLista) :-
+	elimina_avvistati(Coda,NuovaLista).
+
+
+points2states(Stato,Punti,Prigioniero,TempoVicino,StatiFinali) :-
+	elimina_non_validi(Stato,Punti,NuoviPunti),
+	converti_lista(NuoviPunti,Prigioniero,TempoVicino,Stati),
+	elimina_avvistati(Stato,Stati,StatiFinali).
+
+
 
 costo(st(Soldato,Prigioniero),st(Soldato2,Prigioniero),2) :-
 	Soldato \= Soldato2, !.
