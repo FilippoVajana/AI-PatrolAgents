@@ -12,13 +12,16 @@ type [nord,sud,est,ovest]:punto_cardinale.
 pred ronda(id, list(punto)).
 	%ronda(ID, ?LP) det
 	%definisce un percorso di ronda attraverso i suoi punti di passaggio
+:- dynamic ronda/2.
 
 pred sentinella(id, ronda).
 	%sentinella(+ID,?R) definisce una sentinella tramite nome e e identificativo della ronda in corso
+:- dynamic sentinella/2.
 
 pred posizione_sentinella(sentinella, punto).
 	%posizione_sentinella(+S,+P)
-	
+:- dynamic posizione_sentinella/2.
+
 %%	Utile per migliorare la definizione dell'area di attenzione (area_sentinella)
 pred direzione_cammino_sentinella(id_sentinella, punto_cardinale).
 	%direzione_cammino_sentinella(+ID_S,-DS)
@@ -38,33 +41,61 @@ pred sentinella_avanza(id_sentinella).
 %%	IMPLEMENTAZIONI	%%
 
 pred clock(integer).
-	%clock()
-	%il tempo della simulazione avanza di un tick
+	%predicato dinamico che identifica l'istante temporale della simulazione
+:- dynamic clock/1.
+
+pred aggiorna_clock().
+	%fa avanzare di uno step il tempo della simulazione
+
+pred azzera_clock().
+	%porta a 0 il tempo della simulazione
+
+pred aggiorna_ronda(id_sentinella).
+	%aggiorna_ronda(+S)
+	%verifica se è il caso di aggiornare la lista dei punti di passaggio della ronda
+
+aggiorna_ronda(ID_S) :-
+	sentinella(ID_S, ronda(ID_R, [p(XR,YR)|PP_Tail])),
+	posizione_sentinella(ID_S,p(XS,YS)),
+	( (XS - XR + YS - YR) =:= 0 ->
+			%aggiorno ronda
+			assertz(ronda(ID_R,append(PP_Tail, [p(XR,YR)], New_PP))),
+			retractall(ronda(ID_R, [p(XR,YR)|PP_Tail]))
+			;
+		).
 
 
-sim_clock().
-:-dynamic(sim_clock/1).
+clock(0).
 
-clock(Tasd) :-
-	T is sim_clock(T),
-	T_Next is T + 1,
-	assertz(sim_clock(T_Next)),
-	retract(sim_clock(T)).
+aggiorna_clock() :- 
+	clock(Time),
+	New_Time is (Time + 1),
+	retractall(clock(_)),
+	assertz(clock(New_Time)).
 
+azzera_clock() :-
+	retractall(clock(_)),
+	assertz(clock(0)).
 
+%nord
 sentinella_avanza(ID_S) :-
-	clock(asd),
-	sentinella(ID_S, ronda(ID_R,[PP_Head|PP_Tail])),
+	sentinella(ID_S, ronda(ID_R, [PP_Head|PP_Tail])),
+	posizione_sentinella(ID_S, p(XS,YS)),
+
+	%la direzione della sentinella e discriminante per le operazioni seguenti		
 	direzione_cammino_sentinella(ID_S, nord),
+		
+	%aggiorno la posizione della sentinella	
+	New_YS is (YS + 1),
+	retractall(sentinella(ID_S, _)), %elimino vecchia posizione
+	assertz(posizione_sentinella(ID_S, p(XS,New_YS))), %salvo nuova posizione
 
-	assertz(posizione_sentinella(ID_S,p(XS + 1,YS))),
-	retract(posizione_sentinella(ID_S,p(XS,YS))),
-
-	retract(sentinella(ID_S, _)),
-	assertz(sentinella(ID_S, ronda(ID_R,[PP_Tail|PP_Head]))).
-
+	%aggiorno la lista dei punti di passaggio per la ronda
+	aggiorna_ronda(ID_S),
 	
-
+	%il tempo avanza
+	aggiorna_clock(),
+	.
 
 
 ronda(r1, [p(0,0),p(5,0),p(5,5),p(0,5)]).
@@ -73,7 +104,7 @@ ronda(r2, [p(0,0),p(15,0),p(15,15),p(0,15)]).
 sentinella(s1, ronda(r1,PP)) :- ronda(r1,PP).% da rivedere per benino
 sentinella(s2, ronda(r2,PP)) :- ronda(r2,PP).
 
-posizione_sentinella(s1,p(0,0)).
+posizione_sentinella(s1,p(0,-1)).
 
 direzione_cammino_sentinella(ID_S, nord) :-
 	posizione_sentinella(ID_S, p(X_S,Y_S)),
