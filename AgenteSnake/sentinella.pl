@@ -132,7 +132,7 @@ sentinella(s1, ronda(r1,PP)) :- ronda(r1,PP).% da rivedere per benino
 sentinella(s2, ronda(r2,PP)) :- ronda(r2,PP).% eventualmente rimuovere ronda() a favore di id_ronda
 
 posizione_sentinella(s1,p(0,0)).% posizione attuale della sentinella S
-posizione_sentinella(s2,p(0,0)).
+posizione_sentinella(s2,p(0,0)).% la posizione iniziale viene impostata dal programma di generazione della griglia
 
 direzione_cammino_sentinella(ID_S, center) :-
 	posizione_sentinella(ID_S, p(X_S,Y_S)),
