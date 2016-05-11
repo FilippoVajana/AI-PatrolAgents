@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace GridCreator
 {
@@ -11,6 +12,7 @@ namespace GridCreator
     {
         static void Main(string[] args)
         {
+            //leggo input file
             List<string> inputLines = new List<string>();
 
             if (args.Length != 0)
@@ -24,17 +26,19 @@ namespace GridCreator
             {
                 inputLines = ReadFile("Grid_0.txt");
             }
-
-            List<string> gridRulesList = MakeGrid(inputLines);
+            //creo lista rules
+            List<string> gridRulesList = GenerateGridRules(inputLines);
 
             //debug
             System.Console.WriteLine("Original Grid");
             foreach (string s in inputLines)
                 System.Console.WriteLine(s);
+            Console.WriteLine();
 
             System.Console.WriteLine("Grid Rules");
             foreach (string rule in gridRulesList)
                 System.Console.WriteLine(rule);
+            Console.WriteLine();
             //stop
             System.Console.ReadLine();
         }
@@ -52,9 +56,9 @@ namespace GridCreator
             return inputLines;            
         }
 
-        private static List<string> MakeGrid(List<string> inputLines)
+        private static List<string> GenerateGridRules(List<string> inputLines)
         {
-            int gridHeight = inputLines.Count, gridWidth = inputLines.ElementAt(0).Length;
+            int gridHeight = inputLines.Count, gridWidth = inputLines.ElementAt(0).Length;//da cambiare in max con linq
             List<string> gridRulesList = new List<string>();
 
             //inserisco regola id griglia
@@ -62,7 +66,7 @@ namespace GridCreator
             //inserisco regola dimensione griglia
             AddGridDimensionRule(gridHeight, gridWidth, gridRulesList);
 
-            //inserisco regola entità
+            //inserisco regola entità            
             int l = 0;
             foreach(string line in inputLines)
             {
@@ -75,9 +79,14 @@ namespace GridCreator
                 l++;
             }
 
+            //regole sentinelle
+            SentinelManager sManager = new SentinelManager(inputLines);
+            sManager.ParseGrid();
+
             return gridRulesList;
         }
-
+        
+        //refactoring - creare classi per ogni simbolo
         private static void AddGridIdRule(List<string> gridRulesList)
         {
             Random randomNum = new Random(DateTime.Now.Second);
@@ -98,8 +107,6 @@ namespace GridCreator
             string obstacleRule = $"entita_gioco(ostacolo, p({x},{y})).";
             gridRulesList.Add(obstacleRule);
         } 
-
-
 
         private static void WriteFile(string path)
         {
