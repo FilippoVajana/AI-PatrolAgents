@@ -18,7 +18,7 @@ pred sentinella(id, ronda).
 
 pred posizione_sentinella(sentinella, punto).
 	%posizione_sentinella(+S,+P)
-	
+
 %%	Utile per migliorare la definizione dell'area di attenzione (area_sentinella)
 pred direzione_cammino_sentinella(id_sentinella, punto_cardinale).
 	%direzione_cammino_sentinella(+ID_S,-DS)
@@ -72,7 +72,7 @@ giocatore_avvistato(ID_G, ID_S) :-
 	posizione_sentinella(ID_S, p(X_S,Y_S)),
 	area_sentinella(p(X_S,Y_S), A),
 	punto_area(p(X_G, Y_G), A).
-	
+
 
 
 
@@ -111,10 +111,10 @@ area_sentinella(p(I,J), area(p(X1,Y1),p(X2,Y2))) :-
 
 pred avvistato(giocatore, sentinella).
 %%	avvistato(-S) SEMIDET
-%%	Spec: vero sse S Ã¨ la sentinella che ha avvistato l'agente
+%%	Spec: vero sse S � la sentinella che ha avvistato l'agente
 
 avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
-  sentinella_dove(p(SENTX,SENTY),_,NAME) %% NOTA da implementare
+  sentinella_dove(p(SENTX,SENTY),_,NAME), %% NOTA da implementare
   area_sentinella(p(SENTX,SENTY),NAME, area(p(X1,Y1),p(X2,Y2))),
   punto_area(p(SX,SY),area(p(X1,Y1),p(X2,Y2))).
 

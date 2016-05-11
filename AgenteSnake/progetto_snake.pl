@@ -301,24 +301,26 @@ h(st(Soldato,Prigioniero,_Orario),H) :-
 
 /**** LA TERRIBILE PARTE DI RAGIONAMENTO ****/
 
-aggiorna_conoscenza(st(S,P,T),_H,inizio_storia(_Avvio)) :-
-	% in teoria a inizio storia l'agente dovrebbe assumere i percorsi delle
-	% sentinelle
-	pensa(/* non so cosa mettere :-) */).
+aggiorna_conoscenza(st(_S,_P,_T),_H,inizio_storia(_Avvio)) :-
+	% a inizio storia il soldato deve memorizzare le posizioni iniziali delle           sentinelle
+	retractall(conosce(posizione_iniziale_sentinella(_,_,_))),
+	sentinella(Sentinella, Posizione, Direzione),
+	impara(posizione_iniziale_sentinella(Sentinella, Posizione, Direzione)).
 aggiorna_conoscenza(st(S,P,T),_H,transizione(S1,Dec,S2)) :-
 	% il tempo è avanzato
 	clock(Ora),
-	assunto(ronda(Sentinella,PosizioneAssunta,DirezioneAssunta,Ora)),
-	sentinella(Sentinella,PosizioneEffettiva,DirezioneEffettiva),
-	impara(ronda(Sentinella,PosizioneEffettiva,DirezioneEffettiva,Ora)),
-	% se ha sbagliato cancella le assunzioni e ne fa di nuove
-	not(PosizioneAssunta is PosizioneEffettiva,
-	    DirezioneAssunta is DirezioneEffettiva) ->
-	        bagof(O,(assunto(ronda(Sentinella,_,_,O)),O >= Ora),O2),
-	        forall(member(O3,O2),retract(assunto(ronda(Sentinella,_,_,O3)))).
-% NOTA: indagare meglio su questo predicato
+	sentinella(Sentinella,Posizione,Direzione),
+	impara(step_ronda(Sentinella,Posizione,Direzione,Ora)),
 
-assumibile(ronda(_,_,_,_)).
+
+assumibile(ronda(S,L)) :-
+	(   loop_sentinella(S,T),
+	    durata_ronda(S,T,Durata),
+	    componi_ronda(S,Durata,L)
+	;
+	    posizione_iniziale_sentinella(S,Posizione,Direzione),
+	    percorso_rettilineo(S,Posizione,Direzione,L)
+	).
 % Il soldato può ipotizzare una ronda per le sentinelle
 
 contraria(ronda(Sentinella,Pos,Dir,Ora),ronda(Sentinella,PosDiv,DirDiv,Ora)) :-
@@ -328,3 +330,20 @@ contraria(ronda(Sentinella,Pos,Dir,Ora),ronda(Sentinella,PosDiv,DirDiv,Ora)) :-
 contraria(ronda(Sentinella,P1,_D1,Ora),ronda(Sentinella,P2,_D2,OraSucc)) :-
 	not(OraSucc is Ora + 1);
 	not(next(P1,P2)).
+
+pred percorso_rettilineo(sentinella,tempo,punto,direzione,tempo).
+%%	percorso_rettilineo(?S,?T,?P,?D,?TAss) DET
+%%	Spec: vero sse la sentinella, se decidesse di intraprendere un
+%	percorso rettilineo al tempo T, si troverebbe, all'istante TAss,
+%	in posizione P e rivolto verso D.
+
+
+
+
+
+
+
+
+
+
+
