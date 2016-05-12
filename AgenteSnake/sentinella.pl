@@ -210,6 +210,7 @@ sentinella_avanza(ID_S) :-
 
 %%  PREDICATI RELATIVI A SENTINELLA  %%
 
+/*
 pred area_sentinella(sentinella, area).
   % area_sentinella(+S,-A) nondet
   % ritorna l'area coperta dalla sentinella S
@@ -248,3 +249,4 @@ avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
   punto_area(p(SX,SY),area(p(X1,Y1),p(X2,Y2))).
 
   %	Snake viene avvistato se risulta essere nell'area di una sentinella
+  */
