@@ -230,7 +230,7 @@ pred pensa_avvistato(stato,sentinella,punto).
 %	posizione P.
 
 pensa_avvistato(st(Soldato,_P,Tempo),Sentinella,PosizioneSentinella) :-
-	pensa(ronda(Sentinella,PosizioneSentinella,_,Tempo),_),
+	pensa(step_ronda(Sentinella,PosizioneSentinella,_,Tempo),_),
 	area_sentinella(PosizioneSentinella,Area),
 	punto_area(Soldato,Area).
 
@@ -299,43 +299,126 @@ h(st(Soldato,Prigioniero,_Orario),H) :-
 %	Prigioniero.
 
 
+
+
 /**** LA TERRIBILE PARTE DI RAGIONAMENTO ****/
+
+pred posizione_iniziale_sentinella(sentinella, punto, direzione).
+%%	posizione_iniziale_sentinella(?S,?P,?D) SEMIDET
+%%	Spec: vero sse all'istante 0 S si trova in P e guarda verso D.
+%	Usato solo dall'agente per fare assunzioni sulla ronda.
+meta(posizione_iniziale_sentinella(_,_,_)).
+
+pred step_ronda(sentinella, punto, direzione, tempo).
+%%	step_ronda(?S,?P,?D,?T) SEMIDET
+%%	Spec: vero sse all'istante T S si trova in P e guarda verso D.
+%	Usato solo dall'agente per fare assunzioni sulla ronda.
 
 aggiorna_conoscenza(st(_S,_P,_T),_H,inizio_storia(_Avvio)) :-
 	% a inizio storia il soldato deve memorizzare le posizioni iniziali delle           sentinelle
 	retractall(conosce(posizione_iniziale_sentinella(_,_,_))),
 	sentinella(Sentinella, Posizione, Direzione),
-	impara(posizione_iniziale_sentinella(Sentinella, Posizione, Direzione)).
+	impara(posizione_iniziale_sentinella(Sentinella, Posizione, Direzione)),
+	impara(step_ronda(Sentinella, Posizione, Direzione)).
 aggiorna_conoscenza(st(S,P,T),_H,transizione(S1,Dec,S2)) :-
 	% il tempo è avanzato
 	clock(Ora),
 	sentinella(Sentinella,Posizione,Direzione),
-	impara(step_ronda(Sentinella,Posizione,Direzione,Ora)),
+	impara(step_ronda(Sentinella,Posizione,Direzione,Ora)).
 
 
-assumibile(ronda(S,L)) :-
-	(   loop_sentinella(S,T),
-	    durata_ronda(S,T,Durata),
-	    componi_ronda(S,Durata,L)
+assumibile(step_ronda(S,P,D,T)) :-
+	(   clock(Ora),
+	    posizione_sentinella(S,P,D),
+	    trovato_loop(S,P,D,Ora,UltimaVolta),
+	    Durata is Ora - UltimaVolta,
+	    estrai_passi(S,UltimaVolta,Ora,Durata,ListaPassi),
+	    member(step_ronda(S,P,D,T),ListaPassi)
 	;
-	    posizione_iniziale_sentinella(S,Posizione,Direzione),
-	    percorso_rettilineo(S,Posizione,Direzione,L)
+	    posizione_iniziale_sentinella(S,P0,D0),
+	    lunghezza_percorso_rettilineo(LunghezzaPercorso),
+	    percorso_rettilineo(S,P0,D0,0,LunghezzaPercorso,Lista),
+	    member(step_ronda(S,P,D,T),Lista)
 	).
 % Il soldato può ipotizzare una ronda per le sentinelle
 
-contraria(ronda(Sentinella,Pos,Dir,Ora),ronda(Sentinella,PosDiv,DirDiv,Ora)) :-
+contraria(step_ronda(Sentinella,Pos,Dir,Ora),step_ronda(Sentinella,PosDiv,DirDiv,Ora)) :-
 	Pos \= PosDiv;
 	Dir \= DirDiv.
 % una sentinella non può trovarsi in due punti nello stesso momento
-contraria(ronda(Sentinella,P1,_D1,Ora),ronda(Sentinella,P2,_D2,OraSucc)) :-
-	not(OraSucc is Ora + 1);
+contraria(step_ronda(Sentinella,P1,_D1,Ora),step_ronda(Sentinella,P2,_D2,OraSucc)) :-
+	OraSucc == Ora;
 	not(next(P1,P2)).
 
-pred percorso_rettilineo(sentinella,tempo,punto,direzione,tempo).
-%%	percorso_rettilineo(?S,?T,?P,?D,?TAss) DET
-%%	Spec: vero sse la sentinella, se decidesse di intraprendere un
-%	percorso rettilineo al tempo T, si troverebbe, all'istante TAss,
-%	in posizione P e rivolto verso D.
+pred trovato_loop(sentinella, punto, direzione, tempo, tempo).
+%%	trovato_loop(+S,+P,+D,+Ora,-UltimaVolta) SEMIDET
+%%	Spec: vero sse S all'istanta Ora si trova in P,D e si trovava
+%	nella stessa posizione anche all'istante UltimaVolta.
+
+trovato_loop(S,P,D,Ora,UltimaVolta) :-
+	clock(Ora),
+	% bisogna assicurarsi che il passo identico trovato sia il piu' recente
+	bagof(T,(conosce(step_ronda(S,P,D,T)),T > Ora),ListaPassiPrecedenti),
+	max_member(UltimaVolta,ListaPassiPrecedenti),
+	conosce(step_ronda(S,P,D,UltimaVolta)).
+
+pred estrai_passi(sentinella, tempo, tempo, integer, list(step_ronda(_,_,_,_))).
+%%	estrai_passi(+S,+UltimaVolta,+Ora,+Durata,-ListaPassi) DET
+%%	Spec: Prende tutti gli step eseguiti dall'istante UltimaVolta
+%	all'istante Ora e produce una nuova serie di passi identici che
+%	si sviluppano a partire dall'istante Ora. Durata indica il
+%	numero di step che compongono la ronda
+
+estrai_passi(S,Ora,Ora,Durata,[step_ronda(S,P,D,T)]):-
+	conosce(step_ronda(S,P,D,Ora)),
+	T is Ora + Durata.
+estrai_passi(S,UltimaVolta,Ora,Durata,[step_ronda(S,P,D,T) | Coda]) :-
+	UltimaVolta =< Ora,
+	conosce(step_ronda(S,P,D,UltimaVolta)),
+	T is UltimaVolta + Durata,
+	Next is UltimaVolta + 1,
+	estrai_passi(S,Next,Ora,Durata,Coda).
+
+pred percorso_rettilineo(sentinella,posizione,direzione,tempo,integer,list(step_ronda(_,_,_,_))).
+%%	percorso_rettilineo(+S,+P,+D,+T,+Durata,-ListaPassi) DET
+%%	Spec: produce un percorso rettilineo (andata e ritorno) di un
+%	numero di caselle pari a Durata, che inizia al tempo T alla
+%	posizione P,D, per la sentinella S.
+
+percorso_rettilineo(S,P,D,T,Durata,ListaFinale) :-
+	linea_retta(S,P,D,T,Durata,ListaAndata),
+	last(ListaAndata,step_ronda(S,P1,D1,T1)),
+	direzione_opposta(D1,Dopp),
+	linea_retta(S,P1,Dopp,T1,Durata,ListaRitorno),
+	append(ListaAndata,ListaRitorno,ListaFinale).
+
+pred linea_retta(sentinella,punto,direzione,tempo,integer,list(step_ronda(_,_,_,_))).
+%%	linea_retta(+S,+P,+Dir,+TStart,+Lun,-List) DET
+%%	Spec: vero sse List e' una lista di passi che compongono un
+%	percorso rettilineo per S che comincia in P al tempo TStart e
+%	avanza per Lun passi in direzione Dir.
+
+pred linea_retta(sentinella,punto,direzione,tempo,integer,integer,list(step_ronda(_,_,_,_))).
+%%	linea_retta(+S,+P,+Dir,+TStart,+Lun,++Calc-List) DET
+%%	Spec: come sopra, usato internamente da Prolog per i calcoli.
+
+linea_retta(S,Pos,Dir,TStart,Lun,List) :-
+	linea_retta(S,Pos,Dir,TStart,Lun,0,List).
+linea_retta(S,PStart,Dir,TStart,Durata,Calcolati,[step_ronda(S,P,Dir,T)|Coda]) :-
+	Calcolati < Durata, !,
+	passo_avanti(PStart,Dir,P),
+	T is TStart + Calcolati,
+	NewCalcolati is Calcolati + 1,
+	linea_retta(S,P,Dir,TStart,Durata,NewCalcolati,Coda).
+linea_retta(_,_,_,_,C,C,[]).
+
+pred lunghezza_percorso_rettilineo(integer).
+%%	lunghezza_percorso_rettilineo(-Lun) DET
+%%	Spec: predicato che serve a impostare la lunghezza del percorso
+%	rettilineo su cui l'agente fa assunzioni
+:-dynamic(lunghezza_percorso_rettilineo(_)).
+lunghezza_percorso_rettilineo(3).
+
 
 
 
