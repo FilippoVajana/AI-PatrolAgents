@@ -95,31 +95,31 @@ aggiorna_ronda(ID_S) :-
 sentinella_avanza(ID_S) :-
 	sentinella(ID_S, ronda(ID_R, [PP_Head|PP_Tail])),
 	posizione_sentinella(ID_S, p(XS,YS)),
-	%aggiorno la lista dei punti di passaggio per la ronda
+	%%aggiorno la lista dei punti di passaggio per la ronda
 	aggiorna_ronda(ID_S),
 
 	%%if
 	(
 		direzione_cammino_sentinella(ID_S, nord) ->
-			%aggiorno la posizione della sentinella	
+			%%aggiorno la posizione della sentinella	
 			New_YS is (YS + 1),
 			retractall(posizione_sentinella(ID_S,_)),
 			assertz(posizione_sentinella(ID_S, p(XS,New_YS)))
 		;
 		direzione_cammino_sentinella(ID_S, sud) ->
-			%aggiorno la posizione della sentinella	
+			%%aggiorno la posizione della sentinella	
 			New_YS is (YS - 1),
 			retractall(posizione_sentinella(ID_S,_)),
 			assertz(posizione_sentinella(ID_S, p(XS,New_YS)))
 		;
 		direzione_cammino_sentinella(ID_S, est) ->
-			%aggiorno la posizione della sentinella	
+			%%aggiorno la posizione della sentinella	
 			New_XS is (XS + 1),
 			retractall(posizione_sentinella(ID_S,_)),
 			assertz(posizione_sentinella(ID_S, p(New_XS,YS)))
 		;
 		direzione_cammino_sentinella(ID_S, ovest) ->
-			%aggiorno la posizione della sentinella	
+			%%aggiorno la posizione della sentinella	
 			New_XS is (XS - 1),
 			retractall(posizione_sentinella(ID_S,_)),
 			assertz(posizione_sentinella(ID_S, p(New_XS,YS)))		
@@ -134,7 +134,7 @@ sentinella(s2, ronda(r2,PP)) :- ronda(r2,PP).% eventualmente rimuovere ronda() a
 posizione_sentinella(s1,p(0,0)).% posizione attuale della sentinella S
 posizione_sentinella(s2,p(0,0)).% la posizione iniziale viene impostata dal programma di generazione della griglia
 
-direzione_cammino_sentinella(ID_S, center) :-
+direzione_cammino_sentinella(ID_S, center) :- %%da rimuovere
 	posizione_sentinella(ID_S, p(X_S,Y_S)),
 	sentinella(ID_S,ronda(_,[p(X_P,Y_P)|_])),
 	Y_P =:= Y_S, 
