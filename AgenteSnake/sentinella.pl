@@ -1,5 +1,6 @@
 :- discontiguous(ignored(_)).
 :- use_module(library(is_a)).
+:- module(sentinella, []).
 
 type [p(number,number)]:punto.
      %  ogni punto indica un'area quadrata di "terreno"
