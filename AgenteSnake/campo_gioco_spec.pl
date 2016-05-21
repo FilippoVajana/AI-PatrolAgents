@@ -1,12 +1,13 @@
 %% PRIMA BOZZA PER LA GESTIONE E LA STAMPA DEL CAMPO DI GIOCO %%
-
-:- module(campo_gioco, []).
+:- discontiguous(ignored(_)).
+:- use_module(library(is_a)).
+:- module(campo_gioco_spec, []).
 %%Importo da sentinella
-%%:- consult(sentinella).
+:- use_module(sentinella).
 
-type [p(number,number)]:punto.
+%%type [p(number,number)]:punto.
      %  ogni punto indica un'area quadrata di "terreno"
-type [area(punto,punto)]:area.
+%%type [area(punto,punto)]:area.
      %  area(P1,P2): area rettangolare con vertice nord-est P1
      %	e vertice sud-ovest P2
 

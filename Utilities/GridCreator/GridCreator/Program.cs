@@ -19,31 +19,38 @@ namespace GridCreator
             {
                 if (File.Exists(args[0]))
                 {
-                    inputLines = ReadFile(args[0]);
+                    inputLines = readFile(args[0]);
                 } 
             }
             else
             {
-                inputLines = ReadFile("Grid_0.txt");
+                inputLines = readFile("Grid_0.txt");
             }
             //creo lista rules
-            List<string> gridRulesList = GenerateGridRules(inputLines);
+            List<string> gridRulesList = generateGridRules(inputLines);
 
             //debug
+            /*
             System.Console.WriteLine("Original Grid");
             foreach (string s in inputLines)
                 System.Console.WriteLine(s);
             Console.WriteLine();
 
-            System.Console.WriteLine("Grid Rules");
+            System.Console.WriteLine("Grid Rules\n\n");
+            */
             foreach (string rule in gridRulesList)
                 System.Console.WriteLine(rule);
             Console.WriteLine();
+
             //stop
+            Console.WriteLine("Press a Key To Write Result File");
             System.Console.ReadLine();
+
+            //scrivo file output
+            writeRulesFile("campo1.pl", gridRulesList);
         }
 
-        private static List<string> ReadFile(string path)
+        private static List<string> readFile(string path)
         {
             FileStream fileStream = File.Open(path, FileMode.Open);
             StreamReader reader = new StreamReader(fileStream);
@@ -56,15 +63,30 @@ namespace GridCreator
             return inputLines;            
         }
 
-        private static List<string> GenerateGridRules(List<string> inputLines)
+        private static void writeRulesFile(string path, List<string> rules)
+        {
+            FileStream outFile = File.Create(Directory.GetCurrentDirectory() + "\\" + path);
+            StreamWriter writer = new StreamWriter(outFile);
+            writer.AutoFlush = true;
+
+            foreach(string r in rules)
+            {
+                writer.WriteLine(r);
+            }
+            //writer.Flush();
+            writer.Close();            
+        }
+
+        private static List<string> generateGridRules(List<string> inputLines)
         {
             int gridHeight = inputLines.Count, gridWidth = inputLines.ElementAt(0).Length;//da cambiare in max con linq
             List<string> gridRulesList = new List<string>();
-
+            //inserisco header file
+            addHeader(gridRulesList);
             //inserisco regola id griglia
-            AddGridIdRule(gridRulesList);
+            addGridIdRule(gridRulesList);
             //inserisco regola dimensione griglia
-            AddGridDimensionRule(gridHeight, gridWidth, gridRulesList);
+            addGridDimensionRule(gridHeight, gridWidth, gridRulesList);
 
             //inserisco regola entità            
             int l = 0;
@@ -74,27 +96,49 @@ namespace GridCreator
                 for(int c=0; c<_lineArray.Length; c++)
                 {
                     if (_lineArray[c].Equals('#'))
-                        AddObstaclesRule(c, l, gridRulesList);
+                        addObstaclesRule(c, l, gridRulesList);
+                    else if (_lineArray[c].Equals('O'))
+                        addTargetPositionRule(c, l, gridRulesList);
+                    else if (_lineArray[c].Equals('G'))
+                        addPlayerPositionRule(c, l, gridRulesList);
                 }
                 l++;
             }
-
             //regole sentinelle
+            /*
             SentinelManager sManager = new SentinelManager(inputLines);
             sManager.ParseGrid();
-
+            */
             return gridRulesList;
         }
-        
+
         //refactoring - creare classi per ogni simbolo
-        private static void AddGridIdRule(List<string> gridRulesList)
+
+        private static void addPlayerPositionRule(int x, int y, List<string> gridRulesList)
         {
-            Random randomNum = new Random(DateTime.Now.Second);
-            string gridIdRule = $"id_campo({randomNum.Next()}).";
+            string player = $"giocatore(g1,p({x},{y})).";
+            gridRulesList.Add(player);
+        }
+
+        private static void addTargetPositionRule(int x, int y, List<string> gridRulesList)
+        {
+            string target = $"obiettivo(o1,p({x},{y})).";
+            gridRulesList.Add(target);
+        }
+
+        private static void addHeader(List<string> gridRulesList)
+        {
+            string header = ":- use_module(library(is_a)).\n:- use_module(sentinella).\n:- use_module(campo_gioco_spec).\n\n";
+            gridRulesList.Add(header);
+        }
+        
+        private static void addGridIdRule(List<string> gridRulesList)
+        {            
+            string gridIdRule = $"id_campo(0).";
             gridRulesList.Add(gridIdRule);
         }
 
-        private static void AddGridDimensionRule(int height, int width, List<string> gridRulesList)
+        private static void addGridDimensionRule(int height, int width, List<string> gridRulesList)
         {
             string pNE = string.Format("p(0,{0})", height);
             string pSO = string.Format("p({0},0)", width);
@@ -102,15 +146,10 @@ namespace GridCreator
             gridRulesList.Add(dimensionRule);
         }
 
-        private static void AddObstaclesRule(int x, int y, List<string> gridRulesList)
+        private static void addObstaclesRule(int x, int y, List<string> gridRulesList)
         {            
             string obstacleRule = $"entita_gioco(ostacolo, p({x},{y})).";
             gridRulesList.Add(obstacleRule);
         } 
-
-        private static void WriteFile(string path)
-        {
-
-        }
     }
 }
