@@ -1,7 +1,8 @@
 %% PRIMA BOZZA PER LA GESTIONE E LA STAMPA DEL CAMPO DI GIOCO %%
 
+:- use_module('lib/is_a').
 :- module(campo_gioco, []).
-%%Importo da sentinella
+%% Importo da sentinella
 %%:- consult(sentinella).
 
 type [p(number,number)]:punto.
@@ -22,7 +23,7 @@ pred area_griglia(area).
 	%dimensioni del campo da gioco
 	%impostato dal PGG
 
-%%Fine Informazioni 
+%%Fine Informazioni
 
 
 pred entita_gioco(entita, punto).
