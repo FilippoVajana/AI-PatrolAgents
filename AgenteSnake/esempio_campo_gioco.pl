@@ -1,7 +1,6 @@
 %% PRIMA BOZZA PER LA GESTIONE E LA STAMPA DEL CAMPO DI GIOCO %%
-
-:- use_module('lib/is_a').
 :- module(campo_gioco, []).
+:- use_module('lib/is_a').
 %% Importo da sentinella
 %%:- consult(sentinella).
 

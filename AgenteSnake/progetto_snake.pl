@@ -18,14 +18,19 @@
 %  CARICO L'INERFACCIA UTENTE
 :- consult(interfaccia_utente).
 
+% IMPORTO MODULI SPECIFICI DEL PROGETTO
+:- use_module('sentinella').
+
 
 
 type T :- vai_spec:type(T).
 type T :- vai_if:type(T).
 type T :- livello_spec:type(T).
+type T :- sentinella:type(T).
 pred P :- vai_spec:pred(P).
 pred P :- vai_if:pred(P).
 pred P :- livello_spec:pred(P).
+pred P :- sentinella:pred(P).
 
 %%	NOTA: meglio definire tempo in livello.pl
 type [{integer}]: tempo.
@@ -47,7 +52,8 @@ gen [ % piani
        % decisione vado(P,G): cerco un piano per andare da P a G
     % mi_nascondo(punto),
        % decisione mi_nascondo(P): cerco un piano per nascondermi nel punto P
-
+          attesa(integer),
+       % decido di aspettare un certo tempo
      % azioni
     % entro_nascondiglio(punto),
        % azione entro_nascondiglio(P): mi nascondo nel punto P e divento invisibile
@@ -80,12 +86,14 @@ clear_knowledge :-
 % l'ultima mappa caricata
 :- dynamic(ultima/1).
 
-stato_iniziale(st(S0,P), mappa(I)) :-
+stato_iniziale(st(S0,P,ClockIniziale), mappa(I)) :-
 	strategy(astar),
 	strategy(pota_chiusi),
 	carica_mappa(I),
 	soldato(S0),
 	prigioniero(P),
+	azzera_clock,
+	clock(ClockIniziale),
 	(   ultima(I) ->
 	    writeln('CONTINUAZIONE SU ':mappa(I))
 	;   retractall(ultima(_)),
@@ -107,12 +115,12 @@ decidi(st(Soldato,Prigioniero),
        vado(Soldato,Prigioniero)).
 
 % 2) ho eseguito la decisione precedente _Dec;
-decidi(st(Soldato,Prigioniero),
+decidi(st(Soldato,Prigioniero,_Tempo),
        [eseguita(Dec)|_],
        Decisione)
 :- Soldato = Prigioniero ->
-   % se la mia posizione è il goal, termino
-   Decisione = termino(eseguita(Dec))
+   % se la mia posizione e' il goal, termino
+   Decisione is termino(eseguita(Dec))
    ;
    %  altrimenti cerco un piano per andare da Soldato a Prigioniero
    Decisione = vado(Soldato, Prigioniero).
@@ -136,10 +144,16 @@ decidi(st(_Soldato,_,_),
        termino(fallita(vado(S,P))))
 :- avvistato(_Sentinella).
 
+pred soldato(punto).
+%%	soldato(-Position) DET
+%%	Spec: vero sse Position e' la posizione corrente del soldato
+:- dynamic(soldato/1).
+
 %%	NOTA: da implementare
-pred avvistato(sentinella).
-%%	avvistato(-S) SEMIDET
-%%	Spec: vero sse S e' la sentinella che ha avvistato l'agente
+pred avvistato(punto, punto, sentinella).
+%%	avvistato(-PosizioneSoldato,-PosizioneSentinella,-Nome) SEMIDET
+%%	Spec: vero sse Nome e' la sentinella in PosizioneSentinella che
+%	ha avvistato l'agente in PosizioneSoldato
 
 avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
   sentinella_dove(p(SENTX,SENTY),_,NAME), %% NOTA da implementare
@@ -158,7 +172,7 @@ esegui_azione(st(S0,P,T),_Storia,avanzo(S1),st(S1,P,TNext)) :-
 	retract(soldato(S0)),
 	assert(soldato(S1)),
 	clock(T),
-	avanza_tempo,  % predicato che incrementa il valore dell'orologio
+	aggiorna_clock,  % predicato che incrementa il valore dell'orologio
 	clock(TNext).
 esegui_azione(st(S0,P,T),_Storia,aspetto,st(S0,P,TNext)) :-
 	clock(T),

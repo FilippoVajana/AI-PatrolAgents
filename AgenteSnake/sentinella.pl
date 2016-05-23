@@ -1,3 +1,4 @@
+:- module('sentinella',[aggiorna_clock/0,azzera_clock/0,clock/1]).
 :- discontiguous(ignored(_)).
 :- use_module(library(is_a)).
 
