@@ -1,8 +1,10 @@
 :- module('sentinella',
 	  [aggiorna_clock/0,
 	   azzera_clock/0,
-	  clock/1,
-	  posizione_sentinella/2]).
+	   clock/1,
+	   posizione_sentinella/2,
+	   soldato_avvistato/1,
+	   soldato/1]).
 :- discontiguous(ignored(_)).
 :- use_module(library(is_a)).
 
@@ -34,12 +36,12 @@ pred direzione_cammino_sentinella(id_sentinella, punto_cardinale).
 	%direzione_cammino_sentinella(+ID_S,-DS)
 	%restituisce la direzione in cui la sentinella S sta pattugliando/guardando
 
-pred giocatore(punto).
-	%giocatore(?POS)
+pred soldato(punto).
+	%soldato(?POS)
 	%descrive il giocatore tramite posizione
 
-pred giocatore_avvistato(id_sentinella).
-	%giocatore_avvistato(?S)
+pred soldato_avvistato(id_sentinella).
+	%soldato_avvistato(?S)
 	%rileva se il giocatore e' stato avvistato da una sentinella S
 
 pred sentinella_avanza(id_sentinella).
@@ -163,13 +165,13 @@ direzione_cammino_sentinella(ID_S, est) :-
 	sentinella(ID_S,ronda(_,[p(X_P,_Y_P)|_])),
 	X_P @> X_S.
 
-giocatore(p(5,2)).
+soldato(p(5,2)).
 %%	commento gli altri due per eliminare il multiplayer
 % giocatore(g2, p(0,0)).
 % giocatore(g3, p(100,100)).
 
-giocatore_avvistato(ID_S) :-
-	giocatore(p(X_G,Y_G)),
+soldato_avvistato(ID_S) :-
+	soldato(p(X_G,Y_G)),
 	posizione_sentinella(ID_S, p(X_S,Y_S)),
 	area_sentinella(p(X_S,Y_S), A),
 	punto_area(p(X_G, Y_G), A).

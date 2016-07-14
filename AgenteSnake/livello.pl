@@ -57,8 +57,6 @@ area_sentinella(p(I,J), area(p(X1,Y1),p(X2,Y2))) :-
 	X2 is I + 4,
 	Y2 is J - 1.
 
-sentinella_dove(p(X,Y),D,DS,N) :- punto(p(X,Y)).
-
 punto_mappa(p(I,J),size(R,C)) :-
 	Rmax is R-1,
 	Cmax is C-1,
@@ -76,6 +74,17 @@ qualita(o, 999999999).  %sarebbe +infinito
 	  position/1,
 	  goal/1
 	  ]).
+
+%%	POSIZIONE DEL PRIGIONIERO
+pred prigioniero(punto).
+%%	pigioniero(?P) SEMIDET
+%%	Spec: vero sse P e' la posizione del prigioniero
+
+prigioniero(P) :-
+	goal(P).
+
+game_area(P) :-
+	map(P,' ').
 
 
 

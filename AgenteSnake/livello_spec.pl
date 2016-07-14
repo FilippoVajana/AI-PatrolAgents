@@ -98,7 +98,9 @@ pred map_size(size).
 pred position(punto).
   %  position(?P): l'agente si trova nella mappa in posizione P
 pred goal(punto).
-  %  gola(?P): il goal nella mappa è in posizione P
+  %  goal(?P): il goal nella mappa e' in posizione P
+pred game_area(punto).
+  %  game_area(?P) semidet: P e' un punto percorribile della mappa.
 
 %%  PREDICATI GREZZI da escludere dal type checking:
 

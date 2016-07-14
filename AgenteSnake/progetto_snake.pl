@@ -48,10 +48,12 @@ gen [st(punto, punto, tempo)]:stato.
 
 /******   Le decisioni dell'agente  */
 gen [ % piani
-	  vado(punto, punto),
-       % decisione vado(P,G): cerco un piano per andare da P a G          attesa(integer),
+     vado(punto, punto),
+       % decisione vado(P,G): cerco un piano per andare da P a G
+     attesa(integer),
        % decido di aspettare un certo tempo
-     % azioni     aspetto,
+     % azioni
+     aspetto,
        % azione aspetto: sto fermo per un turno
      avanzo(punto),
        % azione avanzo(P): avanzo nel punto indicato
@@ -83,7 +85,7 @@ stato_iniziale(st(S0,P,ClockIniziale), mappa(I)) :-
 	strategy(pota_chiusi),
 	carica_mappa(I),
 	soldato(S0),
-	prigioniero(P),
+	prigioniero(P),  % bisognerebbe definirlo al momento del caricamento della mappa
 	azzera_clock,
 	clock(ClockIniziale),
 	(   ultima(I) ->
@@ -147,10 +149,8 @@ pred avvistato(stato,id_sentinella).
 %%	Spec: vero sse il giocatore viene avvistato da Sentinella quando
 %	si trova nello stato specificato.
 
-avvistato(st(S,_P,_T),Sentinella) :-
-	posizione_sentinella(Sentinella,Posizione),
-	area_sentinella(Posizione,A),
-	punto_area(S,A).
+avvistato(st(_S,_P,_T),Sentinella) :-
+	soldato_avvistato(Sentinella).
 
 /*
 pred avvistato(stato, punto, sentinella).
@@ -240,7 +240,7 @@ vicini(st(Soldato,Prigioniero,Tempo),ListaVicini) :-
 		      ListaAdiacenti,Prigioniero,TempoVicino,
 		      [Soldato | ListaVicini]).
 
-pred pensa_avvistato(stato,sentinella).
+pred pensa_avvistato(stato,id_sentinella).
 %%	pensa_avvistato(+St,-Se) SEMIDET
 %%	Spec: vero sse l'agente nello stato St, secondo le sue
 %	assunzioni, crede che sarà visto dalla sentinella Se
@@ -297,10 +297,10 @@ elimina_avvistati([_ | Coda], NuovaLista) :-
 	elimina_avvistati(Coda,NuovaLista).
 
 
-points2states(Stato,Punti,Prigioniero,TempoVicino,StatiFinali) :-
-	elimina_non_validi(Stato,Punti,NuoviPunti),
+points2states(Punti,Prigioniero,TempoVicino,StatiFinali) :-
+	elimina_non_validi(Punti,NuoviPunti),
 	converti_lista(NuoviPunti,Prigioniero,TempoVicino,Stati),
-	elimina_avvistati(Stato,Stati,StatiFinali).
+	elimina_avvistati(Stati,StatiFinali).
 
 
 
