@@ -34,7 +34,7 @@ pred giocatore(nome, punto).
 
 pred giocatore_avvistato(id_giocatore, id_sentinella).
 	%giocatore_avvistato(+G,?S)
-	%rileva se il giocatore G è stato avvistato da una sentinella S
+	%rileva se il giocatore G e' stato avvistato da una sentinella S
 
 pred sentinella_avanza(id_sentinella).
 	%sentinella_avanza(+ID_S)
@@ -42,7 +42,7 @@ pred sentinella_avanza(id_sentinella).
 
 pred aggiorna_ronda(id_sentinella).
 	%aggiorna_ronda(+S)
-	%verifica se è il caso di aggiornare la lista dei punti di passaggio della ronda
+	%verifica se e' il caso di aggiornare la lista dei punti di passaggio della ronda
 
 pred clock(integer).
 	%predicato dinamico che identifica l'istante temporale della simulazione
@@ -94,7 +94,7 @@ aggiorna_ronda(ID_S) :-
 	true. %%rivedere
 
 sentinella_avanza(ID_S) :-
-	sentinella(ID_S, ronda(ID_R, [PP_Head|PP_Tail])),
+	sentinella(ID_S, ronda(_ID_R, [_PP_Head|_PP_Tail])),
 	posizione_sentinella(ID_S, p(XS,YS)),
 	%aggiorno la lista dei punti di passaggio per la ronda
 	aggiorna_ronda(ID_S),
@@ -141,20 +141,20 @@ direzione_cammino_sentinella(ID_S, center) :-
 	Y_P =:= Y_S,
 	X_P =:= X_S.
 direzione_cammino_sentinella(ID_S, nord) :-
-	posizione_sentinella(ID_S, p(X_S,Y_S)),
-	sentinella(ID_S,ronda(_,[p(X_P,Y_P)|_])),
+	posizione_sentinella(ID_S, p(_X_S,Y_S)),
+	sentinella(ID_S,ronda(_,[p(_X_P,Y_P)|_])),
 	Y_P @> Y_S.
 direzione_cammino_sentinella(ID_S, sud) :-
-	posizione_sentinella(ID_S, p(X_S,Y_S)),
-	sentinella(ID_S,ronda(_,[p(X_P,Y_P)|_])),
+	posizione_sentinella(ID_S, p(_X_S,Y_S)),
+	sentinella(ID_S,ronda(_,[p(_X_P,Y_P)|_])),
 	Y_P @< Y_S.
 direzione_cammino_sentinella(ID_S, ovest) :-
-	posizione_sentinella(ID_S, p(X_S,Y_S)),
-	sentinella(ID_S,ronda(_,[p(X_P,Y_P)|_])),
+	posizione_sentinella(ID_S, p(X_S,_Y_S)),
+	sentinella(ID_S,ronda(_,[p(X_P,_Y_P)|_])),
 	X_P @< X_S.
 direzione_cammino_sentinella(ID_S, est) :-
-	posizione_sentinella(ID_S, p(X_S,Y_S)),
-	sentinella(ID_S,ronda(_,[p(X_P,Y_P)|_])),
+	posizione_sentinella(ID_S, p(X_S,_Y_S)),
+	sentinella(ID_S,ronda(_,[p(X_P,_Y_P)|_])),
 	X_P @> X_S.
 
 giocatore(g1, p(5,2)).

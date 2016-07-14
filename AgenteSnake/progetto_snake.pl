@@ -58,7 +58,7 @@ gen [ % piani
      termino(evento)
     ]: decisione.
 
-% gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
+gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
 % NOTA: forse anche guardia/2 dovrebbe essere assumibile, ma in teoria basta
 %  assumere il pattern
 
@@ -142,7 +142,13 @@ pred soldato(punto).
 :- dynamic(soldato/1).
 
 %%	NOTA: da implementare
-pred avvistato(punto, punto, sentinella).
+pred avvistato(stato,sentinella).
+%%	avvistato(?Stato,-Sentinella) SEMIDET
+%%	Spec: vero sse il giocatore viene avvistato da Sentinella quando
+%	si trova nello stato specificato.
+
+/*
+pred avvistato(stato, punto, sentinella).
 %%	avvistato(-PosizioneSoldato,-PosizioneSentinella,-Nome) SEMIDET
 %%	Spec: vero sse Nome e' la sentinella in PosizioneSentinella che
 %	ha avvistato l'agente in PosizioneSoldato
@@ -151,7 +157,7 @@ avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
   sentinella_dove(p(SENTX,SENTY),_,NAME), %% NOTA da implementare. L'implementazione in livello.pl contiene parametri non usati
   area_sentinella(p(SENTX,SENTY),NAME, area(p(X1,Y1),p(X2,Y2))), % NOTA: la specifica chiede due parametri, l'implementazione ne da quattro. In teoria dovrebbero bastarne tre (coordinate, direzione, nome)
   punto_area(p(SX,SY),area(p(X1,Y1),p(X2,Y2))).
-
+*/
 /**** AZIONI ****/
 
 azione(avanzo(_)).
@@ -316,6 +322,7 @@ pred posizione_iniziale_sentinella(sentinella, punto, direzione).
 %%	Spec: vero sse all'istante 0 S si trova in P e guarda verso D.
 %	Usato solo dall'agente per fare assunzioni sulla ronda.
 meta(posizione_iniziale_sentinella(_,_,_)).
+meta(avvistato(_,_)).
 :-dynamic(posizione_iniziale_sentinella/3).
 
 pred step_ronda(sentinella, punto, direzione, tempo).
