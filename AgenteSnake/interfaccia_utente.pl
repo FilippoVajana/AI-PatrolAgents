@@ -3,7 +3,7 @@ help_progetto :-
 	writeln('*** help_progetto per help\n\n').
 :- writeln(
 '\n**************************************************\n
-       PROGETTO ESPLORATORE\n
+       PROGETTO AGENTE STEALTH\n\nTironi Alessandro 828938\nVajana Filippo BOH\n
  **************************************************\n'),
 help_progetto.
 

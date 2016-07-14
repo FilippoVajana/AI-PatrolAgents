@@ -59,6 +59,12 @@ pred distanza_quadretti(punto, punto, number).
 pred punto_area(punto, area).
   %  punto_area(?P,+A) nondet
   %    P si trova nell'area A
+pred direzione_opposta(direzione,direzione).
+  %  direzone_opposta(+D1,-D2) DET
+  %  Spec: vero sse D1 e D2 sono direzioni opposte
+pred cardinali_opposti(punto_cardinale,punto_cardinale).
+  %  cardinali_opposti(+C1,-C2) DET
+  %  Spec: usato internamente da direzione_opposta, con lo stesso significato.
 
 %%  PREDICATI RELATIVI A SENTINELLA  %%
 

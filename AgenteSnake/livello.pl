@@ -14,6 +14,15 @@ direzioni(no,d(-1,1)).
 direzioni(se,d(1,-1)).
 direzioni(so,d(1,1)).
 
+cardinali_opposti(n,s) :- !.
+cardinali_opposti(e,o) :- !.
+cardinali_opposti(C1,C2) :-
+	cardinali_opposti(C2,C1).
+direzione_opposta(D1,D2) :-
+	direzioni(P1,D1),
+	direzioni(P2,D2),
+	cardinali_opposti(P1,P2).
+
 
 next_dirs(d(V,0), d(V,-1), d(V,1)) :- !.
 next_dirs(d(0,O), d(-1,O), d(1,O)) :- !.
@@ -80,6 +89,8 @@ pred prigioniero(punto).
 %%	pigioniero(?P) SEMIDET
 %%	Spec: vero sse P e' la posizione del prigioniero
 
+soldato(P) :-
+	position(P).
 prigioniero(P) :-
 	goal(P).
 

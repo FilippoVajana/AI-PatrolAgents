@@ -84,8 +84,8 @@ stato_iniziale(st(S0,P,ClockIniziale), mappa(I)) :-
 	strategy(astar),
 	strategy(pota_chiusi),
 	carica_mappa(I),
-	soldato(S0),
-	prigioniero(P),  % bisognerebbe definirlo al momento del caricamento della mappa
+	position(S0),
+	goal(P),
 	azzera_clock,
 	clock(ClockIniziale),
 	(   ultima(I) ->
@@ -131,7 +131,7 @@ decidi(_ST,
 decidi(st(_Soldato,_,_),
        [fallita(vado(S,P),[avanzo(_)|_])|_],
        termino(fallita(vado(S,P))))
-:- avvistato(_Posizione,_CoordSentinella,_Sentinella).
+:- avvistato(_Sentinella).
 % 4B) sono stato visto da una guardia mentre aspettavo in un punto.
 decidi(st(_Soldato,_,_),
        [fallita(vado(S,P),[aspetto|_])|_],
@@ -173,9 +173,7 @@ azione(termino(_)).
 esegui_azione(st(S0,P,T),_Storia,avanzo(S1),st(S1,P,TNext)) :-
 	game_area(S1),  % indica che non contiene ostacoli né npc [DA DEFINIRE]
 	retract(soldato(S0)),
-	retract(giocatore(S0)),
 	assert(soldato(S1)),
-	assert(giocatore(S1)),
 	clock(T),
 	aggiorna_clock,  % predicato che incrementa il valore dell'orologio
 	clock(TNext).
@@ -299,10 +297,10 @@ elimina_avvistati([_ | Coda], NuovaLista) :-
 	elimina_avvistati(Coda,NuovaLista).
 
 
-points2states(Stato,Punti,Prigioniero,TempoVicino,StatiFinali) :-
-	elimina_non_validi(Stato,Punti,NuoviPunti),
+points2states(Punti,Prigioniero,TempoVicino,StatiFinali) :-
+	elimina_non_validi(Punti,NuoviPunti),
 	converti_lista(NuoviPunti,Prigioniero,TempoVicino,Stati),
-	elimina_avvistati(Stato,Stati,StatiFinali).
+	elimina_avvistati(Stati,StatiFinali).
 
 
 

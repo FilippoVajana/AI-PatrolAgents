@@ -84,8 +84,8 @@ stato_iniziale(st(S0,P,ClockIniziale), mappa(I)) :-
 	strategy(astar),
 	strategy(pota_chiusi),
 	carica_mappa(I),
-	soldato(S0),
-	prigioniero(P),  % bisognerebbe definirlo al momento del caricamento della mappa
+	position(S0),
+	goal(P),
 	azzera_clock,
 	clock(ClockIniziale),
 	(   ultima(I) ->
@@ -128,15 +128,15 @@ decidi(_ST,
 
 % 4A) sono stato visto da una guardia mentre tentavo di raggiungiere il
 % prigioniero;
-decidi(st(_Soldato,_,_),
+decidi(Stato,
        [fallita(vado(S,P),[avanzo(_)|_])|_],
        termino(fallita(vado(S,P))))
-:- avvistato(_Posizione,_CoordSentinella,_Sentinella).
+:- avvistato(Stato,_Sentinella).
 % 4B) sono stato visto da una guardia mentre aspettavo in un punto.
-decidi(st(_Soldato,_,_),
+decidi(Stato,
        [fallita(vado(S,P),[aspetto|_])|_],
        termino(fallita(vado(S,P))))
-:- avvistato(_Posizione,_CoordSentinella,_Sentinella).
+:- avvistato(Stato,_Sentinella).
 
 pred soldato(punto).
 %%	soldato(-Position) DET
