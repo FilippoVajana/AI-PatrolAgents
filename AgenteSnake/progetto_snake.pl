@@ -335,20 +335,26 @@ aggiorna_conoscenza(st(_S,_P,T),_H,transizione(_S1,_Dec,_S2)) :-
 	impara(step_ronda(Sentinella,Posizione,Direzione,T)).
 
 
-assumibile(step_ronda(S,P,D,T)) :-
-	(   clock(Ora),
-	    sentinella_dove(S,P,D),
-	    trovato_loop(S,P,D,Ora,UltimaVolta),
-	    Durata is Ora - UltimaVolta,
-	    estrai_passi(S,UltimaVolta,Ora,Durata,ListaPassi),
-	    member(step_ronda(S,P,D,T),ListaPassi)
-	;
-	    posizione_iniziale_sentinella(S,P0,D0),
-	    lunghezza_percorso_rettilineo(LunghezzaPercorso),
-	    percorso_rettilineo(S,P0,D0,0,LunghezzaPercorso,Lista),
-	    member(step_ronda(S,P,D,T),Lista)
-	).
+assumibile(step_ronda(_,_,_,_)).
 % Il soldato può ipotizzare una ronda per le sentinelle
+
+% 1) L'agente ha notato che una sentinella si trova in un punto in cui
+% e' gia' passata, quindi da questo momento l'agente assume che si
+% posizioni sempre in quel punto a intervalli regolari.
+decide_se_assumere(step_ronda(S,P,D,T)) :-
+	clock(Ora),
+	sentinella_dove(S,P,D),
+	trovato_loop(S,P,D,Ora,UltimaVolta), !,
+	Durata is Ora - UltimaVolta,
+	estrai_passi(S,UltimaVolta,Ora,Durata,ListaPassi),
+	member(step_ronda(S,P,D,T),ListaPassi).
+% 2) L'agente non ha notato dei loop e quindi assume che la sentinella
+% compia un percorso rettilineo a partire dalla sua posizione iniziale.
+decide_se_assumere(step_ronda(S,P,D,T)) :-
+	posizione_iniziale_sentinella(S,P0,D0),
+	lunghezza_percorso_rettilineo(LunghezzaPercorso),
+	percorso_rettilineo(S,P0,D0,0,LunghezzaPercorso,Lista),
+	member(step_ronda(S,P,D,T),Lista).
 
 % NOTA: Siamo sicuri che non sia corretto assumere piu' posizioni
 % simultanee per una sentinella? Assumere piu' posizioni potrebbe

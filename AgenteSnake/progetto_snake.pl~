@@ -43,30 +43,22 @@ gen [mappa(number)]: info_inizio.
 gen [st(punto, punto, tempo)]:stato.
     % st(P,G): il soldato si trova in P e deve andare a G
     % NOTA: possibili aggiunte di termini allo stato
-         % tempo: perché le posizioni dei nemici cambiano a seconda del tempo
-         % visibilità: da usare se si implementa la possibilità di nascondersi
+         % tempo: perche' le posizioni dei nemici cambiano a seconda del tempo
+         % visibilita'�: da usare se si implementa la possibilità di nascondersi
 
 /******   Le decisioni dell'agente  */
 gen [ % piani
 	  vado(punto, punto),
-       % decisione vado(P,G): cerco un piano per andare da P a G
-    % mi_nascondo(punto),
-       % decisione mi_nascondo(P): cerco un piano per nascondermi nel punto P
-          attesa(integer),
+       % decisione vado(P,G): cerco un piano per andare da P a G          attesa(integer),
        % decido di aspettare un certo tempo
-     % azioni
-    % entro_nascondiglio(punto),
-       % azione entro_nascondiglio(P): mi nascondo nel punto P e divento invisibile
-    % esco_nascondiglio(punto),
-       % azione esco_nascondiglio(P): esco dal nascondiglio in P e torno visibile
-     aspetto,
+     % azioni     aspetto,
        % azione aspetto: sto fermo per un turno
      avanzo(punto),
        % azione avanzo(P): avanzo nel punto indicato
      termino(evento)
     ]: decisione.
 
-gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
+% gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
 % NOTA: forse anche guardia/2 dovrebbe essere assumibile, ma in teoria basta
 %  assumere il pattern
 
