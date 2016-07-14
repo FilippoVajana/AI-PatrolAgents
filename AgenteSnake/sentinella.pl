@@ -1,4 +1,8 @@
-:- module('sentinella',[aggiorna_clock/0,azzera_clock/0,clock/1]).
+:- module('sentinella',
+	  [aggiorna_clock/0,
+	   azzera_clock/0,
+	  clock/1,
+	  posizione_sentinella/2]).
 :- discontiguous(ignored(_)).
 :- use_module(library(is_a)).
 
@@ -10,16 +14,18 @@ type [area(punto,punto)]:area.
 type [nord,sud,est,ovest,center]:punto_cardinale.
      % i 4 ben noti punti cardinali
 
+type id_sentinella.
+
 pred ronda(id, list(punto)).
 	%ronda(ID, ?LP) det
 	%definisce un percorso di ronda attraverso i suoi punti di passaggio
 :- dynamic ronda/2.
 
-pred sentinella(id, ronda).
+pred sentinella(id_sentinella, ronda).
 	%sentinella(+ID,?R) definisce una sentinella tramite nome e e identificativo della ronda in corso
 :- dynamic sentinella/2.
 
-pred posizione_sentinella(sentinella, punto).
+pred posizione_sentinella(id_sentinella, punto).
 	%posizione_sentinella(+S,+P)
 :- dynamic posizione_sentinella/2.
 %%	Utile per migliorare la definizione dell'area di attenzione (area_sentinella)
@@ -28,13 +34,13 @@ pred direzione_cammino_sentinella(id_sentinella, punto_cardinale).
 	%direzione_cammino_sentinella(+ID_S,-DS)
 	%restituisce la direzione in cui la sentinella S sta pattugliando/guardando
 
-pred giocatore(nome, punto).
-	%giocatore(+G,+POS)
-	%descrive un giocatore tramite nome e posizione
+pred giocatore(punto).
+	%giocatore(?POS)
+	%descrive il giocatore tramite posizione
 
-pred giocatore_avvistato(id_giocatore, id_sentinella).
-	%giocatore_avvistato(+G,?S)
-	%rileva se il giocatore G e' stato avvistato da una sentinella S
+pred giocatore_avvistato(id_sentinella).
+	%giocatore_avvistato(?S)
+	%rileva se il giocatore e' stato avvistato da una sentinella S
 
 pred sentinella_avanza(id_sentinella).
 	%sentinella_avanza(+ID_S)
@@ -157,12 +163,13 @@ direzione_cammino_sentinella(ID_S, est) :-
 	sentinella(ID_S,ronda(_,[p(X_P,_Y_P)|_])),
 	X_P @> X_S.
 
-giocatore(g1, p(5,2)).
-giocatore(g2, p(0,0)).
-giocatore(g3, p(100,100)).
+giocatore(p(5,2)).
+%%	commento gli altri due per eliminare il multiplayer
+% giocatore(g2, p(0,0)).
+% giocatore(g3, p(100,100)).
 
-giocatore_avvistato(ID_G, ID_S) :-
-	giocatore(ID_G, p(X_G,Y_G)),
+giocatore_avvistato(ID_S) :-
+	giocatore(p(X_G,Y_G)),
 	posizione_sentinella(ID_S, p(X_S,Y_S)),
 	area_sentinella(p(X_S,Y_S), A),
 	punto_area(p(X_G, Y_G), A).
@@ -238,14 +245,4 @@ area_sentinella(p(I,J), area(p(X1,Y1),p(X2,Y2))) :-
 %%	progetto_snake.pl	%%
 
 %% PREDICATI RELATIVI A SENTINELLA  %%
-
-pred avvistato(giocatore, sentinella).
-%%	avvistato(-S) SEMIDET
-%%	Spec: vero sse S è la sentinella che ha avvistato l'agente
-
-avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
-  sentinella_dove(p(SENTX,SENTY),_,NAME), %% NOTA da implementare
-  area_sentinella(p(SENTX,SENTY),NAME, area(p(X1,Y1),p(X2,Y2))),
-  punto_area(p(SX,SY),area(p(X1,Y1),p(X2,Y2))).
-
-  %	Snake viene avvistato se risulta essere nell'area di una sentinella
+%%	NOTA: spostato "avvistato" nel file del progetto

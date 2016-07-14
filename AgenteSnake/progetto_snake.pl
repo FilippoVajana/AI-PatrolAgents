@@ -142,10 +142,15 @@ pred soldato(punto).
 :- dynamic(soldato/1).
 
 %%	NOTA: da implementare
-pred avvistato(stato,sentinella).
+pred avvistato(stato,id_sentinella).
 %%	avvistato(?Stato,-Sentinella) SEMIDET
 %%	Spec: vero sse il giocatore viene avvistato da Sentinella quando
 %	si trova nello stato specificato.
+
+avvistato(st(S,_P,_T),Sentinella) :-
+	posizione_sentinella(Sentinella,Posizione),
+	area_sentinella(Posizione,A),
+	punto_area(S,A).
 
 /*
 pred avvistato(stato, punto, sentinella).
@@ -235,15 +240,15 @@ vicini(st(Soldato,Prigioniero,Tempo),ListaVicini) :-
 		      ListaAdiacenti,Prigioniero,TempoVicino,
 		      [Soldato | ListaVicini]).
 
-pred pensa_avvistato(stato,sentinella,punto).
-%%	pensa_avvistato(+St,-Se,-P) SEMIDET
+pred pensa_avvistato(stato,sentinella).
+%%	pensa_avvistato(+St,-Se) SEMIDET
 %%	Spec: vero sse l'agente nello stato St, secondo le sue
-%	assunzioni, crede che sarà visto dalla sentinella Se alla
-%	posizione P.
+%	assunzioni, crede che sarà visto dalla sentinella Se
+%	nell'istante tempo definito dal suo stato.
 
-pensa_avvistato(st(Soldato,_P,Tempo),Sentinella,PosizioneSentinella) :-
+pensa_avvistato(st(Soldato,_P,Tempo),Sentinella) :-
 	pensa(step_ronda(Sentinella,PosizioneSentinella,_,Tempo),_),
-	area_sentinella(PosizioneSentinella,Area),
+	area_sentinella(PosizioneSentinella,Area), %% area_sentinella non dovrebbe tener conto della sua direzione?
 	punto_area(Soldato,Area).
 
 
@@ -286,7 +291,7 @@ converti_lista([S | Coda],P,TempoVicino,[st(S,P,TempoVicino) | StatiCoda]) :-
 
 elimina_avvistati([],[]) :- !.
 elimina_avvistati([Testa | Coda], [Testa | NuovaLista]) :-
-	not(pensa_avvistato(Testa,_,_)), !,
+	not(pensa_avvistato(Testa,_)), !,
 	elimina_avvistati(Coda,NuovaLista).
 elimina_avvistati([_ | Coda], NuovaLista) :-
 	elimina_avvistati(Coda,NuovaLista).

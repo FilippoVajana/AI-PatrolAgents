@@ -142,12 +142,15 @@ pred soldato(punto).
 :- dynamic(soldato/1).
 
 %%	NOTA: da implementare
-pred avvistato(stato,sentinella).
+pred avvistato(stato,id_sentinella).
 %%	avvistato(?Stato,-Sentinella) SEMIDET
 %%	Spec: vero sse il giocatore viene avvistato da Sentinella quando
 %	si trova nello stato specificato.
 
-avvistato(st(P,D,T),Sentinella) :-
+avvistato(st(S,_P,_T),Sentinella) :-
+	posizione_sentinella(Sentinella,Posizione),
+	area_sentinella(Posizione,A),
+	punto_area(S,A).
 
 /*
 pred avvistato(stato, punto, sentinella).
