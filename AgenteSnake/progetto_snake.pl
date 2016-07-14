@@ -43,30 +43,22 @@ gen [mappa(number)]: info_inizio.
 gen [st(punto, punto, tempo)]:stato.
     % st(P,G): il soldato si trova in P e deve andare a G
     % NOTA: possibili aggiunte di termini allo stato
-         % tempo: perchÃ© le posizioni dei nemici cambiano a seconda del tempo
-         % visibilitÃ : da usare se si implementa la possibilitÃ  di nascondersi
+         % tempo: perche' le posizioni dei nemici cambiano a seconda del tempo
+         % visibilita' : da usare se si implementa la possibilitÃ  di nascondersi
 
 /******   Le decisioni dell'agente  */
 gen [ % piani
 	  vado(punto, punto),
-       % decisione vado(P,G): cerco un piano per andare da P a G
-    % mi_nascondo(punto),
-       % decisione mi_nascondo(P): cerco un piano per nascondermi nel punto P
-          attesa(integer),
+       % decisione vado(P,G): cerco un piano per andare da P a G          attesa(integer),
        % decido di aspettare un certo tempo
-     % azioni
-    % entro_nascondiglio(punto),
-       % azione entro_nascondiglio(P): mi nascondo nel punto P e divento invisibile
-    % esco_nascondiglio(punto),
-       % azione esco_nascondiglio(P): esco dal nascondiglio in P e torno visibile
-     aspetto,
+     % azioni     aspetto,
        % azione aspetto: sto fermo per un turno
      avanzo(punto),
        % azione avanzo(P): avanzo nel punto indicato
      termino(evento)
     ]: decisione.
 
-gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
+% gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
 % NOTA: forse anche guardia/2 dovrebbe essere assumibile, ma in teoria basta
 %  assumere il pattern
 
@@ -104,12 +96,12 @@ stato_iniziale(st(S0,P,ClockIniziale), mappa(I)) :-
 
 /****  B: le decisioni *******/
 
-% fine ÃƒÂ¨ specificato in vai_if; la decisione finale ÃƒÂ¨ termino(...)
+% fine e' specificato in vai_if; la decisione finale e' termino(...)
 fine(termino(_)).
 
-% decidi ÃƒÂ¨ specificato in vai_if;  lo implemento come segue
-% 1) sono a inizio storia con stato st(S,P);
-decidi(st(Soldato,Prigioniero),
+% decidi e' specificato in vai_if;  lo implemento come segue
+% 1) sono a inizio storia con stato st(S,P,T);
+decidi(st(Soldato,Prigioniero,_Tempo),
        [inizio_storia(_I)],
        % decido di cercare un piano per andare da P0 a G
        vado(Soldato,Prigioniero)).
@@ -123,13 +115,13 @@ decidi(st(Soldato,Prigioniero,_Tempo),
    Decisione is termino(eseguita(Dec))
    ;
    %  altrimenti cerco un piano per andare da Soldato a Prigioniero
-   Decisione = vado(Soldato, Prigioniero).
+   Decisione is vado(Soldato, Prigioniero).
 
-% 3) nella ricerca del piano ho verificato che il prigioniero Ã¨
-% irraggiungibile oppure non si puÃ² raggiungere evitando le guardie;
+% 3) nella ricerca del piano ho verificato che il prigioniero e'
+% irraggiungibile oppure non si puo' raggiungere evitando le guardie;
 decidi(_ST,
        [impossibile(vado(Soldato,Prigioniero))|_],
-       % termino per impossibilitÃ  di raggiungere il goal
+       % termino per impossibilita'  di raggiungere il goal
        termino(impossibile(vado(Soldato,Prigioniero)))).
 
 % 4A) sono stato visto da una guardia mentre tentavo di raggiungiere il
@@ -137,12 +129,12 @@ decidi(_ST,
 decidi(st(_Soldato,_,_),
        [fallita(vado(S,P),[avanzo(_)|_])|_],
        termino(fallita(vado(S,P))))
-:- avvistato(_Sentinella).
+:- avvistato(_Posizione,_CoordSentinella,_Sentinella).
 % 4B) sono stato visto da una guardia mentre aspettavo in un punto.
 decidi(st(_Soldato,_,_),
        [fallita(vado(S,P),[aspetto|_])|_],
        termino(fallita(vado(S,P))))
-:- avvistato(_Sentinella).
+:- avvistato(_Posizione,_CoordSentinella,_Sentinella).
 
 pred soldato(punto).
 %%	soldato(-Position) DET
@@ -156,8 +148,8 @@ pred avvistato(punto, punto, sentinella).
 %	ha avvistato l'agente in PosizioneSoldato
 
 avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
-  sentinella_dove(p(SENTX,SENTY),_,NAME), %% NOTA da implementare
-  area_sentinella(p(SENTX,SENTY),NAME, area(p(X1,Y1),p(X2,Y2))),
+  sentinella_dove(p(SENTX,SENTY),_,NAME), %% NOTA da implementare. L'implementazione in livello.pl contiene parametri non usati
+  area_sentinella(p(SENTX,SENTY),NAME, area(p(X1,Y1),p(X2,Y2))), % NOTA: la specifica chiede due parametri, l'implementazione ne da quattro. In teoria dovrebbero bastarne tre (coordinate, direzione, nome)
   punto_area(p(SX,SY),area(p(X1,Y1),p(X2,Y2))).
 
 /**** AZIONI ****/
@@ -168,7 +160,7 @@ azione(termino(_)).
 
 % Specifica in vai_if.pl
 esegui_azione(st(S0,P,T),_Storia,avanzo(S1),st(S1,P,TNext)) :-
-	game_area(S1),  % indica che non contiene ostacoli né npc
+	game_area(S1),  % indica che non contiene ostacoli né npc [DA DEFINIRE]
 	retract(soldato(S0)),
 	assert(soldato(S1)),
 	clock(T),
@@ -176,7 +168,7 @@ esegui_azione(st(S0,P,T),_Storia,avanzo(S1),st(S1,P,TNext)) :-
 	clock(TNext).
 esegui_azione(st(S0,P,T),_Storia,aspetto,st(S0,P,TNext)) :-
 	clock(T),
-	avanza_tempo,  % cambia solo il valore dell'orologio
+	aggiorna_clock,  % cambia solo il valore dell'orologio
         clock(TNext).
 
 
@@ -301,9 +293,11 @@ points2states(Stato,Punti,Prigioniero,TempoVicino,StatiFinali) :-
 
 
 
-costo(st(Soldato,Prigioniero),st(Soldato2,Prigioniero),2) :-
-	Soldato \= Soldato2, !.
-costo(st(Soldato,Prigioniero),st(Soldato,Prigioniero),1).
+costo(st(Soldato,Prigioniero,Tempo),st(Soldato2,Prigioniero,TempoNext),2) :-
+	Soldato \= Soldato2,
+	Tempo = TempoNext - 1, !. % NOTA: controllare uso di = o is
+costo(st(Soldato,Prigioniero,Tempo),st(Soldato,Prigioniero,TempoNext),1) :-
+	Tempo = TempoNext - 1.
 %%	Spostarsi costa 2, aspettare costa 1.
 
 
@@ -322,6 +316,7 @@ pred posizione_iniziale_sentinella(sentinella, punto, direzione).
 %%	Spec: vero sse all'istante 0 S si trova in P e guarda verso D.
 %	Usato solo dall'agente per fare assunzioni sulla ronda.
 meta(posizione_iniziale_sentinella(_,_,_)).
+:-dynamic(posizione_iniziale_sentinella/3).
 
 pred step_ronda(sentinella, punto, direzione, tempo).
 %%	step_ronda(?S,?P,?D,?T) SEMIDET
@@ -331,19 +326,18 @@ pred step_ronda(sentinella, punto, direzione, tempo).
 aggiorna_conoscenza(st(_S,_P,_T),_H,inizio_storia(_Avvio)) :-
 	% a inizio storia il soldato deve memorizzare le posizioni iniziali delle           sentinelle
 	retractall(conosce(posizione_iniziale_sentinella(_,_,_))),
-	sentinella(Sentinella, Posizione, Direzione),
+	sentinella_dove(Sentinella, Posizione, Direzione),
 	impara(posizione_iniziale_sentinella(Sentinella, Posizione, Direzione)),
 	impara(step_ronda(Sentinella, Posizione, Direzione)).
-aggiorna_conoscenza(st(S,P,T),_H,transizione(S1,Dec,S2)) :-
-	% il tempo è avanzato
-	clock(Ora),
-	sentinella(Sentinella,Posizione,Direzione),
-	impara(step_ronda(Sentinella,Posizione,Direzione,Ora)).
+aggiorna_conoscenza(st(_S,_P,T),_H,transizione(_S1,_Dec,_S2)) :-
+	% l'ora attuale e' quella dello stato (T)
+	sentinella_dove(Sentinella,Posizione,Direzione),
+	impara(step_ronda(Sentinella,Posizione,Direzione,T)).
 
 
 assumibile(step_ronda(S,P,D,T)) :-
 	(   clock(Ora),
-	    posizione_sentinella(S,P,D),
+	    sentinella_dove(S,P,D),
 	    trovato_loop(S,P,D,Ora,UltimaVolta),
 	    Durata is Ora - UltimaVolta,
 	    estrai_passi(S,UltimaVolta,Ora,Durata,ListaPassi),
@@ -356,9 +350,14 @@ assumibile(step_ronda(S,P,D,T)) :-
 	).
 % Il soldato può ipotizzare una ronda per le sentinelle
 
+% NOTA: Siamo sicuri che non sia corretto assumere piu' posizioni
+% simultanee per una sentinella? Assumere piu' posizioni potrebbe
+% rendere il percorso piu' sicuro. Per ora commento
+/*
 contraria(step_ronda(Sentinella,Pos,Dir,Ora),step_ronda(Sentinella,PosDiv,DirDiv,Ora)) :-
 	Pos \= PosDiv;
 	Dir \= DirDiv.
+*/
 % una sentinella non può trovarsi in due punti nello stesso momento
 contraria(step_ronda(Sentinella,P1,_D1,Ora),step_ronda(Sentinella,P2,_D2,OraSucc)) :-
 	OraSucc == Ora;
@@ -420,7 +419,7 @@ linea_retta(S,Pos,Dir,TStart,Lun,List) :-
 	linea_retta(S,Pos,Dir,TStart,Lun,0,List).
 linea_retta(S,PStart,Dir,TStart,Durata,Calcolati,[step_ronda(S,P,Dir,T)|Coda]) :-
 	Calcolati < Durata, !,
-	passo_avanti(PStart,Dir,P),
+	passo_avanti(PStart,Dir,P), % NOTA: implementare questa cosa!
 	T is TStart + Calcolati,
 	NewCalcolati is Calcolati + 1,
 	linea_retta(S,P,Dir,TStart,Durata,NewCalcolati,Coda).
@@ -430,7 +429,7 @@ pred lunghezza_percorso_rettilineo(integer).
 %%	lunghezza_percorso_rettilineo(-Lun) DET
 %%	Spec: predicato che serve a impostare la lunghezza del percorso
 %	rettilineo su cui l'agente fa assunzioni
-:-dynamic(lunghezza_percorso_rettilineo(_)).
+:-dynamic(lunghezza_percorso_rettilineo/1).
 lunghezza_percorso_rettilineo(3).
 
 

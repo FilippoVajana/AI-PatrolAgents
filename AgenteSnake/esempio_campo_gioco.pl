@@ -38,3 +38,12 @@ pred in_griglia(punto).
 in_griglia(p(X,Y)) :- area_griglia(area(p(Xne,Yne),p(Xso,Yso))),
 						between(Xso,Xne,X),
 						between(Yso,Yne,Y).
+
+pred game_area(punto).
+%%	game_area(?P) DET
+%%	Spec: vero sse P e' un punto percorribile della griglia
+
+game_area(P) :-
+	in_griglia(P),
+	not(entita_gioco(_,P)).
+
