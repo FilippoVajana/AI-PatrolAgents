@@ -39,6 +39,9 @@ pred next(punto, direzione, punto, number).
 pred next(punto, punto).
   %   next(+P1, ?P2)  semidet
   %   P2 è adiacente a P1
+pred passo_avanti(punto,punto_cardinale,punto).
+  %   passo_avanti(+P1,+Dir,-P2) DET
+  %   P2 e' il punto raggiunto da P1 facendo un passo verso Dir
 pred adiacenti(punto, list(punto)).
   %   adiacenti(+P, -L)	det
   %   L è la lista dei punti adiacenti a P

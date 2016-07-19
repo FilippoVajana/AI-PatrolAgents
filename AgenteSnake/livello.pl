@@ -42,6 +42,11 @@ next(p(X1,Y1), d(V,O), p(X2, Y2), L) :-
 next(P1,P2) :-
 	next(P1,_,P2,_).
 
+passo_avanti(P0,Dir,P1) :-
+	direzioni(Dir,Vett),
+	next(P0,Vett,P1,1).
+
+
 adiacenti(P, V) :-
 	setof(N, next(P,N), V).
 

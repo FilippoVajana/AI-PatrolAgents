@@ -236,8 +236,7 @@ trovato(st(P,P,_)).
 vicini(st(Soldato,Prigioniero,Tempo),ListaVicini) :-
 	adiacenti(Soldato,ListaAdiacenti),
 	TempoVicino is Tempo + 1,
-	points2states(st(Soldato,Prigioniero,Tempo),
-		      ListaAdiacenti,Prigioniero,TempoVicino,
+	points2states(ListaAdiacenti,Prigioniero,TempoVicino,
 		      [Soldato | ListaVicini]).
 
 pred pensa_avvistato(stato,id_sentinella).
@@ -253,7 +252,7 @@ pensa_avvistato(st(Soldato,_P,Tempo),Sentinella) :-
 
 
 pred elimina_non_validi(list(punto),list(punto)).
-%%	elimina_non_validi(+ListaPunti,+NuovaLista) DET
+%%	elimina_non_validi(+ListaPunti,-NuovaLista) DET
 %%	Spec: vero sse NuovaLista contiene solo i punti di ListaPunti a
 %	cui corrisponde un'area percorribile e in cui l'agente non pensa
 %	di poter essere avvistato.
@@ -338,12 +337,12 @@ pred step_ronda(sentinella, punto, direzione, tempo).
 aggiorna_conoscenza(st(_S,_P,_T),_H,inizio_storia(_Avvio)) :-
 	% a inizio storia il soldato deve memorizzare le posizioni iniziali delle           sentinelle
 	retractall(conosce(posizione_iniziale_sentinella(_,_,_))),
-	sentinella_dove(Sentinella, Posizione, Direzione),
+	stato_sentinella(Sentinella, Posizione, Direzione),
 	impara(posizione_iniziale_sentinella(Sentinella, Posizione, Direzione)),
 	impara(step_ronda(Sentinella, Posizione, Direzione)).
 aggiorna_conoscenza(st(_S,_P,T),_H,transizione(_S1,_Dec,_S2)) :-
 	% l'ora attuale e' quella dello stato (T)
-	sentinella_dove(Sentinella,Posizione,Direzione),
+	stato_sentinella(Sentinella,Posizione,Direzione),
 	impara(step_ronda(Sentinella,Posizione,Direzione,T)).
 
 
@@ -355,7 +354,7 @@ assumibile(step_ronda(_,_,_,_)).
 % posizioni sempre in quel punto a intervalli regolari.
 decide_se_assumere(step_ronda(S,P,D,T)) :-
 	clock(Ora),
-	sentinella_dove(S,P,D),
+	stato_sentinella(S,P,D),
 	trovato_loop(S,P,D,Ora,UltimaVolta), !,
 	Durata is Ora - UltimaVolta,
 	estrai_passi(S,UltimaVolta,Ora,Durata,ListaPassi),
@@ -449,7 +448,6 @@ pred lunghezza_percorso_rettilineo(integer).
 %	rettilineo su cui l'agente fa assunzioni
 :-dynamic(lunghezza_percorso_rettilineo/1).
 lunghezza_percorso_rettilineo(3).
-
 
 
 
