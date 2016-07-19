@@ -3,6 +3,8 @@
 	   azzera_clock/0,
 	   clock/1,
 	   posizione_sentinella/2,
+	   stato_sentinella/3,
+	   sentinella/2,
 	   soldato_avvistato/1,
 	   soldato/1]).
 :- discontiguous(ignored(_)).
@@ -35,6 +37,11 @@ pred posizione_sentinella(id_sentinella, punto).
 pred direzione_cammino_sentinella(id_sentinella, punto_cardinale).
 	%direzione_cammino_sentinella(+ID_S,-DS)
 	%restituisce la direzione in cui la sentinella S sta pattugliando/guardando
+
+pred stato_sentinella(id_sentinella,punto,punto_cardinale).
+%%	stato_sentinella(?Id,?Punto,?Dir) SEMIDET
+%%	Spec: vero sse la sentinella Id si trova attualmente nel punto
+%	Punto e guarda verso Dir
 
 pred soldato(punto).
 	%soldato(?POS)
@@ -164,6 +171,10 @@ direzione_cammino_sentinella(ID_S, est) :-
 	posizione_sentinella(ID_S, p(X_S,_Y_S)),
 	sentinella(ID_S,ronda(_,[p(X_P,_Y_P)|_])),
 	X_P @> X_S.
+
+stato_sentinella(Id,Punto,Direzione) :-
+	posizione_sentinella(Id,Punto),
+	direzione_cammino_sentinella(Id,Direzione).
 
 soldato(p(5,2)).
 %%	commento gli altri due per eliminare il multiplayer

@@ -1,6 +1,7 @@
 :- discontiguous(ignored(_)).
 :- use_module(library(is_a)).
 :- use_module(livello_spec).
+:- use_module(sentinella).
 
 type T :- livello_spec:type(T).
 pred P :- livello_spec:pred(P).
@@ -77,13 +78,6 @@ qualita(p, 2).
 qualita(o, 999999999).  %sarebbe +infinito
 
 
-:- dynamic(
-	 [map/2,
-	  map_size/1,
-	  position/1,
-	  goal/1
-	  ]).
-
 %%	POSIZIONE DEL PRIGIONIERO
 pred prigioniero(punto).
 %%	pigioniero(?P) SEMIDET
@@ -97,6 +91,14 @@ prigioniero(P) :-
 game_area(P) :-
 	map(P,' ').
 
+:- dynamic(
+	 [map/2,
+	  map_size/1,
+	  position/1,
+	  goal/1,
+	  soldato/1,
+	  prigioniero/1
+	  ]).
 
 
 mostra_mappa(Map) :-
@@ -112,6 +114,11 @@ mostra_mappa(Map, size(R,C)) :-
 		   nl
 	       )).
 
+% indica il nome del file da caricare, dato il numero.
+nome_file_ronde(1,ronde_1).
+nome_file_ronde(2,ronde_2).
+nome_file_ronde(3,ronde_3).
+
 
 /**********************  ALCUNI AMBIENTI CARICABILI *************
                          DA UNA LISTA DI ATOMI
@@ -123,6 +130,7 @@ carica_mappa(N) :-
 	retractall(position(_)),
 	retractall(goal(_)),
 	retractall(map_size(_)),
+	carica_ronde(N),
 	ambiente(N, A),
 	maplist(atom_chars, A, AA),
 	length(A,NR),
@@ -132,10 +140,16 @@ carica_mappa(N) :-
 	forall(nth0(I,AA,Row),
 	       forall(nth0(J,Row,Ch), store_map(p(I,J),Ch))).
 
+carica_ronde(N) :-
+	retractall(sentinella(_,_)),
+	nome_file_ronde(N,F),
+	consult(F).
+
+
 store_map(P,x) :- !,
 	assert(map(P,' ')),
 	assert(position(P)).
-store_map(P,g) :- !,
+store_map(P,p) :- !,
 	assert(map(P,' ')),
 	assert(goal(P)).
 store_map(P, Ch) :-
@@ -143,6 +157,7 @@ store_map(P, Ch) :-
 
 ignored(ambiente(_,_)).
 
+/*
 ambiente(1, [
 'oooooooooo',
 'o   x    o',
@@ -172,12 +187,24 @@ ambiente(3, [
 'oooooooooo',
 'o      g o',
 'oooooooooo']).
+*/
 
-
-
-
-
-
+%%	AMBIENTI DEL PROGETTO agente stealth
+% x indica il giocatore
+% p indica il prigioniero
+% la posizione e la ronda delle sentinelle sono dichiarate nei file
+% ronda1.pl, ronda2.pl...
+ambiente(1, [
+'oooooooooooooo',
+'opo          o',
+'o	      o',
+'o	      o',
+'o	      o',
+'o            o',
+'o	      o',
+'o	      o',
+'o	  x   o',
+'oooooooooooooo']).
 
 
 
