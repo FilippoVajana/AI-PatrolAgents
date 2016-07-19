@@ -60,7 +60,7 @@ gen [ % piani
      termino(evento)
     ]: decisione.
 
-gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
+gen [step_ronda(sentinella,punto,direzione,tempo)]: assumibile.
 % NOTA: forse anche guardia/2 dovrebbe essere assumibile, ma in teoria basta
 %  assumere il pattern
 
@@ -137,11 +137,6 @@ decidi(Stato,
        [fallita(vado(S,P),[aspetto|_])|_],
        termino(fallita(vado(S,P))))
 :- avvistato(Stato,_Sentinella).
-
-pred soldato(punto).
-%%	soldato(-Position) DET
-%%	Spec: vero sse Position e' la posizione corrente del soldato
-:- dynamic(soldato/1).
 
 %%	NOTA: da implementare
 pred avvistato(stato,id_sentinella).

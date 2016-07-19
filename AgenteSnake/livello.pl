@@ -83,18 +83,13 @@ qualita(p, 2).
 qualita(o, 999999999).  %sarebbe +infinito
 
 
-%%	POSIZIONE DEL PRIGIONIERO
+pred soldato(punto).
+%%	soldato(?P) SEMIDET
+%%	Spec: vero sse P e' la posizione del soldato
 pred prigioniero(punto).
-%%	pigioniero(?P) SEMIDET
+%%	prigioniero(?P) SEMIDET
 %%	Spec: vero sse P e' la posizione del prigioniero
 
-soldato(P) :-
-	position(P).
-prigioniero(P) :-
-	goal(P).
-
-game_area(P) :-
-	map(P,' ').
 
 :- dynamic(
 	 [map/2,
@@ -104,6 +99,14 @@ game_area(P) :-
 	  soldato/1,
 	  prigioniero/1
 	  ]).
+
+soldato(P) :-
+	position(P).
+prigioniero(P) :-
+	goal(P).
+
+game_area(P) :-
+	map(P,' ').
 
 
 mostra_mappa(Map) :-
@@ -204,6 +207,8 @@ ambiente(1, [
 'opo          o',
 'o	      o',
 'o	      o',
+'o	      o',
+'o            o',
 'o	      o',
 'o            o',
 'o	      o',

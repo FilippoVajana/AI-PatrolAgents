@@ -60,7 +60,7 @@ gen [ % piani
      termino(evento)
     ]: decisione.
 
-gen [ronda(sentinella,punto,direzione,tempo)]: assumibile.
+gen [step_ronda(sentinella,punto,direzione,tempo)]: assumibile.
 % NOTA: forse anche guardia/2 dovrebbe essere assumibile, ma in teoria basta
 %  assumere il pattern
 
@@ -236,8 +236,7 @@ trovato(st(P,P,_)).
 vicini(st(Soldato,Prigioniero,Tempo),ListaVicini) :-
 	adiacenti(Soldato,ListaAdiacenti),
 	TempoVicino is Tempo + 1,
-	points2states(st(Soldato,Prigioniero,Tempo),
-		      ListaAdiacenti,Prigioniero,TempoVicino,
+	points2states(ListaAdiacenti,Prigioniero,TempoVicino,
 		      [Soldato | ListaVicini]).
 
 pred pensa_avvistato(stato,id_sentinella).
@@ -253,7 +252,7 @@ pensa_avvistato(st(Soldato,_P,Tempo),Sentinella) :-
 
 
 pred elimina_non_validi(list(punto),list(punto)).
-%%	elimina_non_validi(+ListaPunti,+NuovaLista) DET
+%%	elimina_non_validi(+ListaPunti,-NuovaLista) DET
 %%	Spec: vero sse NuovaLista contiene solo i punti di ListaPunti a
 %	cui corrisponde un'area percorribile e in cui l'agente non pensa
 %	di poter essere avvistato.

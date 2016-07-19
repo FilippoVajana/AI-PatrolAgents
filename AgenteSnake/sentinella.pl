@@ -5,9 +5,9 @@
 	   posizione_sentinella/2,
 	   stato_sentinella/3,
 	   sentinella/2,
-	   soldato_avvistato/1,
-	   soldato/1]).
+	   soldato_avvistato/1]).
 :- discontiguous(ignored(_)).
+:- discontiguous sentinella: (pred)/1.
 :- use_module(library(is_a)).
 
 type [p(number,number)]:punto.
@@ -43,7 +43,7 @@ pred stato_sentinella(id_sentinella,punto,punto_cardinale).
 %%	Spec: vero sse la sentinella Id si trova attualmente nel punto
 %	Punto e guarda verso Dir
 
-pred soldato(punto).
+% pred soldato(punto).
 	%soldato(?POS)
 	%descrive il giocatore tramite posizione
 
@@ -141,6 +141,7 @@ sentinella_avanza(ID_S) :-
 			assertz(posizione_sentinella(ID_S, p(New_XS,YS)))
 	).
 
+
 ronda(r1, [p(0,0),p(5,0),p(5,5),p(0,5)]).
 ronda(r2, [p(0,0),p(15,0),p(15,15),p(0,15)]).
 
@@ -149,6 +150,7 @@ sentinella(s2, ronda(r2,PP)) :- ronda(r2,PP).% eventualmente rimuovere ronda() a
 
 posizione_sentinella(s1,p(0,0)).% posizione attuale della sentinella S
 posizione_sentinella(s2,p(0,0)).% la posizione iniziale viene impostata dal programma di generazione della griglia
+
 
 direzione_cammino_sentinella(ID_S, center) :-
 	posizione_sentinella(ID_S, p(X_S,Y_S)),
@@ -176,7 +178,8 @@ stato_sentinella(Id,Punto,Direzione) :-
 	posizione_sentinella(Id,Punto),
 	direzione_cammino_sentinella(Id,Direzione).
 
-soldato(p(5,2)).
+%%	In realta' soldato/1 dovrebbe provenire da livello!
+% soldato(p(5,2)).
 %%	commento gli altri due per eliminare il multiplayer
 % giocatore(g2, p(0,0)).
 % giocatore(g3, p(100,100)).
