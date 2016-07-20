@@ -205,15 +205,15 @@ ambiente(3, [
 ambiente(1, [
 'oooooooooooooo',
 'opo          o',
-'o	      o',
-'o	      o',
-'o	      o',
+'o            o',
+'o            o',
 'o            o',
 'o	      o',
 'o            o',
-'o	      o',
-'o	      o',
-'o	  x   o',
+'o            o',
+'o            o',
+'o            o',
+'o        x   o',
 'oooooooooooooo']).
 
 

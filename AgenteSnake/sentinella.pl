@@ -82,7 +82,8 @@ aggiorna_clock() :-
 	clock(Time),
 	New_Time is (Time + 1),
 	retractall(clock(_)),
-	assertz(clock(New_Time)).
+	assertz(clock(New_Time)),
+	forall(sentinella(ID,_),sentinella_avanza(ID)).
 
 azzera_clock() :-
 	retractall(clock(_)),
@@ -142,6 +143,7 @@ sentinella_avanza(ID_S) :-
 	).
 
 
+/*
 ronda(r1, [p(0,0),p(5,0),p(5,5),p(0,5)]).
 ronda(r2, [p(0,0),p(15,0),p(15,15),p(0,15)]).
 
@@ -150,7 +152,7 @@ sentinella(s2, ronda(r2,PP)) :- ronda(r2,PP).% eventualmente rimuovere ronda() a
 
 posizione_sentinella(s1,p(0,0)).% posizione attuale della sentinella S
 posizione_sentinella(s2,p(0,0)).% la posizione iniziale viene impostata dal programma di generazione della griglia
-
+*/
 
 direzione_cammino_sentinella(ID_S, center) :-
 	posizione_sentinella(ID_S, p(X_S,Y_S)),

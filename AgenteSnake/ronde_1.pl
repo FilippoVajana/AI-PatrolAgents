@@ -1,4 +1,6 @@
 :- use_module(sentinella).
 
-sentinella(s1,ronda(r1,[p(2,4),p(5,4)])).
-sentinella(s2,ronda(r2,[p(11,10),p(11,7),p(9,7),p(9,10)])).
+:-assert(sentinella(s1,ronda(r1,[p(9,2),p(9,5)]))).
+:-assert(sentinella(s2,ronda(r2,[p(2,10),p(5,10),p(5,7),p(2,7)]))).
+:-assert(posizione_sentinella(s1,p(9,2))).
+:-assert(posizione_sentinella(s2,p(2,10))).

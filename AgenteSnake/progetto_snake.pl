@@ -84,8 +84,8 @@ stato_iniziale(st(S0,P,ClockIniziale), mappa(I)) :-
 	strategy(astar),
 	strategy(pota_chiusi),
 	carica_mappa(I),
-	position(S0),
-	goal(P),
+	soldato(S0),
+	prigioniero(P),
 	azzera_clock,
 	clock(ClockIniziale),
 	(   ultima(I) ->
@@ -114,10 +114,10 @@ decidi(st(Soldato,Prigioniero,_Tempo),
        Decisione)
 :- Soldato = Prigioniero ->
    % se la mia posizione e' il goal, termino
-   Decisione is termino(eseguita(Dec))
+   Decisione = termino(eseguita(Dec))
    ;
    %  altrimenti cerco un piano per andare da Soldato a Prigioniero
-   Decisione is vado(Soldato, Prigioniero).
+   Decisione = vado(Soldato, Prigioniero).
 
 % 3) nella ricerca del piano ho verificato che il prigioniero e'
 % irraggiungibile oppure non si puo' raggiungere evitando le guardie;
@@ -145,7 +145,8 @@ pred avvistato(stato,id_sentinella).
 %	si trova nello stato specificato.
 
 avvistato(st(_S,_P,_T),Sentinella) :-
-	soldato_avvistato(Sentinella).
+	soldato_avvistato(Sentinella),
+	writeln('AVVISTATO DA ':Sentinella).
 
 /*
 pred avvistato(stato, punto, sentinella).
@@ -162,7 +163,7 @@ avvistato(p(SX,SY),p(SENTX,SENTY),NAME) :-
 
 azione(avanzo(_)).
 azione(aspetto).
-azione(termino(_)).
+% azione(termino(_)).
 
 % Specifica in vai_if.pl
 esegui_azione(st(S0,P,T),_Storia,avanzo(S1),st(S1,P,TNext)) :-
@@ -322,6 +323,7 @@ pred posizione_iniziale_sentinella(sentinella, punto, direzione).
 %	Usato solo dall'agente per fare assunzioni sulla ronda.
 meta(posizione_iniziale_sentinella(_,_,_)).
 meta(avvistato(_,_)).
+meta(step_ronda(_,_,_,_)).
 :-dynamic(posizione_iniziale_sentinella/3).
 
 pred step_ronda(sentinella, punto, direzione, tempo).
@@ -329,16 +331,17 @@ pred step_ronda(sentinella, punto, direzione, tempo).
 %%	Spec: vero sse all'istante T S si trova in P e guarda verso D.
 %	Usato solo dall'agente per fare assunzioni sulla ronda.
 
-aggiorna_conoscenza(st(_S,_P,_T),_H,inizio_storia(_Avvio)) :-
+aggiorna_conoscenza(st(_S,_P,T),_H,inizio_storia(_Avvio)) :-
 	% a inizio storia il soldato deve memorizzare le posizioni iniziali delle           sentinelle
 	retractall(conosce(posizione_iniziale_sentinella(_,_,_))),
-	stato_sentinella(Sentinella, Posizione, Direzione),
-	impara(posizione_iniziale_sentinella(Sentinella, Posizione, Direzione)),
-	impara(step_ronda(Sentinella, Posizione, Direzione)).
+	forall(stato_sentinella(Sentinella, Posizione, Direzione),
+	       impara(posizione_iniziale_sentinella(Sentinella, Posizione, Direzione))),
+	forall(stato_sentinella(Sentinella,Posizione,Direzione),
+	       impara(step_ronda(Sentinella, Posizione, Direzione, T))).
 aggiorna_conoscenza(st(_S,_P,T),_H,transizione(_S1,_Dec,_S2)) :-
 	% l'ora attuale e' quella dello stato (T)
-	stato_sentinella(Sentinella,Posizione,Direzione),
-	impara(step_ronda(Sentinella,Posizione,Direzione,T)).
+	forall(stato_sentinella(Sentinella,Posizione,Direzione),
+	       impara(step_ronda(Sentinella,Posizione,Direzione,T))).
 
 
 assumibile(step_ronda(_,_,_,_)).
@@ -369,12 +372,12 @@ decide_se_assumere(step_ronda(S,P,D,T)) :-
 contraria(step_ronda(Sentinella,Pos,Dir,Ora),step_ronda(Sentinella,PosDiv,DirDiv,Ora)) :-
 	Pos \= PosDiv;
 	Dir \= DirDiv.
-*/
+
 % una sentinella non può trovarsi in due punti nello stesso momento
 contraria(step_ronda(Sentinella,P1,_D1,Ora),step_ronda(Sentinella,P2,_D2,OraSucc)) :-
 	OraSucc == Ora;
 	not(next(P1,P2)).
-
+*/
 pred trovato_loop(sentinella, punto, direzione, tempo, tempo).
 %%	trovato_loop(+S,+P,+D,+Ora,-UltimaVolta) SEMIDET
 %%	Spec: vero sse S all'istanta Ora si trova in P,D e si trovava
