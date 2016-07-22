@@ -146,7 +146,7 @@ pred avvistato(stato,id_sentinella).
 
 avvistato(st(_S,_P,_T),Sentinella) :-
 	soldato_avvistato(Sentinella),
-	writeln('Avvistato da ':Sentinella).
+	writeln('AVVISTATO DA ':Sentinella).
 
 /*
 pred avvistato(stato, punto, sentinella).
@@ -189,24 +189,25 @@ pred cerca_un_piano(punto,punto,list(decisione)).
 %	porta da S a P. Il predicato fallisce se non esiste una lista di
 %	decisioni possibili.
 
-pred current_goal(punto).
+pred current_goal(passo(punto,tempo)).
 %%	current_goal(?G) SEMIDET
 %%	Spec: vero sse G e' il goal da usare nella libreria mr.pl
 :-dynamic(current_goal/1).
 
 cerca_un_piano(P,G,Piano) :-
 	retractall(current_goal(_)),
-	assert(current_goal(G)),
-	solve(P,Soluzione,=(G)),
+	assert(current_goal(passo(G,_))),
+	clock(T),
+	solve(passo(P,T),Soluzione,=(passo(G,_))),
 	estrai_piano(Soluzione,Piano).
 
 
-type [nc(punto,list(punto),number)]:nodo.
+type [nc(passo(punto,tempo),list(passo(punto,tempo)),number)]:nodo.
 % importo tipo nodo per search
 
 pred estrai_piano(nodo, list(decisione)).
 %%	estrai_piano(+Sol,-Piano) DET
-%%	Spec: vero sse Piano Ã¨ la sequenza di avanzamenti che percorre
+%%	Spec: vero sse Piano e' la sequenza di avanzamenti che percorre
 %	la sequenza di posizioni calcolata nella soluzione Sol
 estrai_piano(nc(G,RevPath,_C),Piano) :-
 	reverse([G|RevPath],[_Start|Path]),
@@ -217,42 +218,54 @@ pred path2moves(list(punto),list(decisione)).
 %%	Spec: vero sse DList e' una lista di decisioni che rappresentano
 %	il percorso di PList
 path2moves([],[]) :- !.
-path2moves([P,P|Path],[aspetto|MovList]) :-
+path2moves([passo(P,T0),passo(P,T1)|Path],[aspetto|MovList]) :-
+	T1 =:= T0 + 1,
 	path2moves(Path,MovList), !.
-path2moves([P|Path],[avanzo(P)|MovList]) :-
+path2moves([passo(P,_)|Path],[avanzo(P)|MovList]) :-
 	path2moves(Path,MovList).
 
 
 
 /**** IMPLEMENTAZIONE DEI PREDICATI RICHIESTI DA SEARCH_IF.PL ****/
-trovato(st(P,P,_)).
+trovato(P) :-
+	current_goal(P).
 %%	La ricerca si ferma quando la posizione del soldato coincide con
 %	quella del prigioniero.
 
-vicini(st(Soldato,Prigioniero,Tempo),ListaVicini) :-
+vicini(passo(Soldato,Tempo),ListaVicini) :-
 	adiacenti(Soldato,ListaAdiacenti),
 	TempoVicino is Tempo + 1,
-	points2states(ListaAdiacenti,Prigioniero,TempoVicino,
-		      [Soldato | ListaVicini]).
+	elimina_non_validi(ListaAdiacenti,TempoVicino,ListaVicini).
 
-pred pensa_avvistato(stato,id_sentinella).
-%%	pensa_avvistato(+St,-Se) SEMIDET
-%%	Spec: vero sse l'agente nello stato St, secondo le sue
+pred pensa_avvistato(punto,tempo,id_sentinella).
+%%	pensa_avvistato(+S,+T,-Se) SEMIDET
+%%	Spec: vero sse l'agente nel punto P, secondo le sue
 %	assunzioni, crede che sarà visto dalla sentinella Se
-%	nell'istante tempo definito dal suo stato.
+%	nell'istante tempo T.
 
-pensa_avvistato(st(Soldato,_P,Tempo),Sentinella) :-
+pensa_avvistato(Soldato,Tempo,Sentinella) :-
 	pensa(step_ronda(Sentinella,PosizioneSentinella,_,Tempo),_),
 	area_sentinella(PosizioneSentinella,Area), %% area_sentinella non dovrebbe tener conto della sua direzione?
 	punto_area(Soldato,Area).
 
 
-pred elimina_non_validi(list(punto),list(punto)).
-%%	elimina_non_validi(+ListaPunti,-NuovaLista) DET
+pred elimina_non_validi(list(punto),tempo,list(punto)).
+%%	elimina_non_validi(+ListaPunti,+T,-NuovaLista) DET
 %%	Spec: vero sse NuovaLista contiene solo i punti di ListaPunti a
 %	cui corrisponde un'area percorribile e in cui l'agente non pensa
-%	di poter essere avvistato.
+%	di poter essere avvistato nel tempo T.
 
+elimina_non_validi([],_,[]) :- !.
+elimina_non_validi([P|AltriPunti],Tempo,[passo(P,Tempo)|AltriVicini]) :-
+	game_area(P),
+	pensa(step_ronda(_,Posizione,_,Tempo),_),
+	P \== Posizione,
+	not(pensa_avvistato(P,Tempo,_)), !,
+	elimina_non_validi(AltriPunti,Tempo,AltriVicini).
+elimina_non_validi([_P|AltriPunti],Tempo,[AltriVicini]) :-
+	elimina_non_validi(AltriPunti,Tempo,AltriVicini).
+
+/*
 pred converti_lista(list(punto),punto,tempo,list(stato)).
 %%	converti_lista(+ListaPunti,+Prigioniero,+TempoVicino,-ListaStati)
 %	DET Spec: vero sse ListaStati rappresenta gli elementi di
@@ -264,6 +277,8 @@ pred elimina_avvistati(list(stato),list(stato)).
 %%	elimina_avvistati(+ListaStati,-ListaStatiSicuri) DET
 %%	Spec: vero sse elimina_avvistati elimina da ListaStati tutti gli
 %	stati in cui l'agente pensa di venire avvistato.
+
+
 
 pred points2states(list(punto),punto,tempo,list(stato)).
 %%	points2states(+ListaPunti,+Prigioniero,+Tempo,-ListaStati) DET
@@ -296,18 +311,17 @@ points2states(Punti,Prigioniero,TempoVicino,StatiFinali) :-
 	elimina_non_validi(Punti,NuoviPunti),
 	converti_lista(NuoviPunti,Prigioniero,TempoVicino,Stati),
 	elimina_avvistati(Stati,StatiFinali).
+*/
 
 
-
-costo(st(Soldato,Prigioniero,Tempo),st(Soldato2,Prigioniero,TempoNext),2) :-
-	Soldato \= Soldato2,
-	Tempo = TempoNext - 1, !. % NOTA: controllare uso di = o is
-costo(st(Soldato,Prigioniero,Tempo),st(Soldato,Prigioniero,TempoNext),1) :-
-	Tempo = TempoNext - 1.
+costo(passo(Soldato,_),passo(Soldato2,_),2) :-
+	Soldato \= Soldato2.
+costo(passo(Soldato,_),passo(Soldato,_),1).
 %%	Spostarsi costa 2, aspettare costa 1.
 
 
-h(st(Soldato,Prigioniero,_Orario),H) :-
+h(passo(Soldato,_),H) :-
+	current_goal(passo(Prigioniero,_)),
 	distanza_euclidea(Soldato,Prigioniero,H).
 %%	L'euristica usata è per ora la distanza euclidea tra Soldato e
 %	Prigioniero.
@@ -360,10 +374,33 @@ decide_se_assumere(step_ronda(S,P,D,T)) :-
 % 2) L'agente non ha notato dei loop e quindi assume che la sentinella
 % compia un percorso rettilineo a partire dalla sua posizione iniziale.
 decide_se_assumere(step_ronda(S,P,D,T)) :-
-	posizione_iniziale_sentinella(S,P0,D0),
-	lunghezza_percorso_rettilineo(LunghezzaPercorso),
-	percorso_rettilineo(S,P0,D0,0,LunghezzaPercorso,Lista),
+	lunghezza_percorso_rettilineo(R),
+	T =< R,
+	conosce(posizione_iniziale_sentinella(S,P0,_D0)),
+	clock(Ora),
+	ronda_assunta(S,P0,Ora,Lista),
 	member(step_ronda(S,P,D,T),Lista).
+% 3) L'agente ha gia' fatto delle assunzioni o ha gia' verificato degli
+% step quindi ripete le stesse assunzioni ma su tempi diversi.
+decide_se_assumere(step_ronda(S,P,D,T)) :-
+	lunghezza_percorso_rettilineo(R),
+	T > R,
+	setof(step_ronda(S,P,D,_),pensa(step_ronda(S,P,D,_),_),L),
+	setof(T1,member(step_ronda(S,P,D,T1),L),ListaTempi),
+	sort(ListaTempi,TempiOrdinati),
+	reverse(TempiOrdinati,TempiDec),
+	(   length(TempiDec,1),
+	    TempiDec = [Tmax|_],
+	    Tprec is 0
+	;
+	    TempiDec = [Tmax,Tprec|_]),
+	Diff is Tmax - Tprec,
+	T is Tmax + Diff.
+
+
+max([X],X).
+max([X|Xs],X):- max(Xs,Y), X >=Y.
+max([X|Xs],N):- max(Xs,N), N > X.
 
 % NOTA: Siamo sicuri che non sia corretto assumere piu' posizioni
 % simultanee per una sentinella? Assumere piu' posizioni potrebbe
@@ -407,6 +444,39 @@ estrai_passi(S,UltimaVolta,Ora,Durata,[step_ronda(S,P,D,T) | Coda]) :-
 	Next is UltimaVolta + 1,
 	estrai_passi(S,Next,Ora,Durata,Coda).
 
+pred ronda_assunta(id_sentinella,punto,tempo,list(step_ronda(id_sentinella,punto,direzione,tempo))).
+%%	ronda_assunta(+Id,+Pos,+T,-ListaStep) DET
+%%	Spec: vero sse ListaStep e' una lista contenente tutte le
+%	posizioni della sentinella Id assunte dall'agente
+ronda_assunta(Sentinella,Posizione,Tempo,ListaStep) :-
+	area_assunta(Sentinella,Posizione,Tempo,area(Posizione,Posizione),2,ListaStep).
+
+area_assunta(Se,Pos,T,area(p(I1,J1),p(I2,J2)),I,ListaStep) :-
+	I1n is I1 - I,
+	J1n is J1 + I,
+	I2n is I2 + I,
+	J2n is J2 - I,
+	setof(P,punto_area(P,area(p(I1n,J1n),p(I2n,J2n))),PuntiArea),
+	map_size(Size),
+	setof(P1,(member(P1,PuntiArea),punto_mappa(P1,Size)),PuntiAreaValidi),
+	setof(Step,(member(Punto,PuntiAreaValidi),converti_punto(Punto,Pos,Se,T,Step)),ListaStep).
+
+converti_punto(Punto,Posizione,Sent,Tempo,step_ronda(Sent,Punto,Dir,T1)) :-
+    distanza_quadretti(Posizione,Punto,T0),
+    T1 is Tempo + round(T0),
+    verso(Posizione,Punto,Dir).
+
+/*
+pred converti_punti(id_sentinella,punto,tempo,list(punto),list(step_ronda(id_sentinella,punto,direzione,tempo))).
+%%	converti_punti(+Id,+Pos,+T,+ListaPunti,-ListaStep) DET
+%%	Spec: converte una lista di punti in una lista di
+%	step_ronda(_,_,_,_)
+converti_punti(_,_,_,[],[]).
+converti_punti(S,Pos,T,[P|AltriPunti],[step_ronda(S,P,Dir,T)|AltriStep]) :-
+	verso(Pos,P,Dir),
+	converti_punti(S,Pos,T,AltriPunti,AltriStep).
+*/
+
 pred percorso_rettilineo(sentinella,posizione,direzione,tempo,integer,list(step_ronda(_,_,_,_))).
 %%	percorso_rettilineo(+S,+P,+D,+T,+Durata,-ListaPassi) DET
 %%	Spec: produce un percorso rettilineo (andata e ritorno) di un
@@ -445,7 +515,7 @@ pred lunghezza_percorso_rettilineo(integer).
 %%	Spec: predicato che serve a impostare la lunghezza del percorso
 %	rettilineo su cui l'agente fa assunzioni
 :-dynamic(lunghezza_percorso_rettilineo/1).
-lunghezza_percorso_rettilineo(3).
+lunghezza_percorso_rettilineo(2).
 
 
 

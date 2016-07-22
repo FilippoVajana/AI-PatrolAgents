@@ -10,10 +10,12 @@ direzioni(n,d(-1,0)).
 direzioni(s,d(1,0)).
 direzioni(e,d(0,-1)).
 direzioni(o,d(0,1)).
+/* elimino perche' aumentano solo la quantita' di calcoli inutili
 direzioni(ne,d(-1,-1)).
 direzioni(no,d(-1,1)).
 direzioni(se,d(1,-1)).
 direzioni(so,d(1,1)).
+*/
 
 cardinali_opposti(n,s) :- !.
 cardinali_opposti(e,o) :- !.

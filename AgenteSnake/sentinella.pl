@@ -158,19 +158,19 @@ direzione_cammino_sentinella(ID_S, center) :-
 	posizione_sentinella(ID_S, p(X_S,Y_S)),
 	sentinella(ID_S,ronda(_,[p(X_P,Y_P)|_])),
 	Y_P =:= Y_S,
-	X_P =:= X_S.
+	X_P =:= X_S,!.
 direzione_cammino_sentinella(ID_S, nord) :-
 	posizione_sentinella(ID_S, p(_X_S,Y_S)),
 	sentinella(ID_S,ronda(_,[p(_X_P,Y_P)|_])),
-	Y_P @> Y_S.
+	Y_P @> Y_S,!.
 direzione_cammino_sentinella(ID_S, sud) :-
 	posizione_sentinella(ID_S, p(_X_S,Y_S)),
 	sentinella(ID_S,ronda(_,[p(_X_P,Y_P)|_])),
-	Y_P @< Y_S.
+	Y_P @< Y_S,!.
 direzione_cammino_sentinella(ID_S, ovest) :-
 	posizione_sentinella(ID_S, p(X_S,_Y_S)),
 	sentinella(ID_S,ronda(_,[p(X_P,_Y_P)|_])),
-	X_P @< X_S.
+	X_P @< X_S,!.
 direzione_cammino_sentinella(ID_S, est) :-
 	posizione_sentinella(ID_S, p(X_S,_Y_S)),
 	sentinella(ID_S,ronda(_,[p(X_P,_Y_P)|_])),
