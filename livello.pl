@@ -8,8 +8,8 @@ pred P :- livello_spec:pred(P).
 
 direzioni(n,d(-1,0)).
 direzioni(s,d(1,0)).
-direzioni(e,d(0,-1)).
-direzioni(o,d(0,1)).
+direzioni(e,d(0,1)).
+direzioni(o,d(0,-1)).
 
 
 next_dirs(d(V,0), d(V,-1), d(V,1)) :- !.
@@ -113,9 +113,7 @@ store_map(P, Ch) :-
 
 carica_ronde(N) :-
 	get_file(N,Filename),
-	retractall(ronda(_,_)),
-	retractall(sentinella(_,_)),
-	retractall(posizione_sentinella(_,_)),
+	retractall(ronda(_,_,_,_)),
 	consult(Filename).
 
 get_file(1,'ronde_1').

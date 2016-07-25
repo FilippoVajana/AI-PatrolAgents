@@ -2,8 +2,9 @@
 		   aggiorna_clock/0,
 		   azzera_clock/0]).
 
-clock(0).
+
 :- dynamic(clock/1).
+clock(0).
 
 aggiorna_clock :-
 	clock(Time),

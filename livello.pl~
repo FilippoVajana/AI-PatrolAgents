@@ -1,14 +1,15 @@
 :- discontiguous(ignored(_)).
 :- use_module(library(is_a)).
 :- use_module(livello_spec).
+:- use_module(sentinella).
 
 type T :- livello_spec:type(T).
 pred P :- livello_spec:pred(P).
 
 direzioni(n,d(-1,0)).
 direzioni(s,d(1,0)).
-direzioni(e,d(0,-1)).
-direzioni(o,d(0,1)).
+direzioni(e,d(0,1)).
+direzioni(o,d(0,-1)).
 
 
 next_dirs(d(V,0), d(V,-1), d(V,1)) :- !.
@@ -91,6 +92,7 @@ carica_mappa(N) :-
 	retractall(goal(_)),
 	retractall(map_size(_)),
 	%% INSERIRE CARICAMENTO RONDE
+	carica_ronde(N),
 	ambiente(N, A),
 	maplist(atom_chars, A, AA),
 	length(A,NR),
@@ -103,11 +105,22 @@ carica_mappa(N) :-
 store_map(P,x) :- !,
 	assert(map(P,' ')),
 	assert(position(P)).
-store_map(P,g) :- !,
+store_map(P,p) :- !,
 	assert(map(P,' ')),
 	assert(goal(P)).
 store_map(P, Ch) :-
 	assert(map(P,Ch)).
+
+carica_ronde(N) :-
+	get_file(N,Filename),
+	retractall(ronda(_,_)),
+	retractall(sentinella(_,_)),
+	retractall(posizione_sentinella(_,_)),
+	consult(Filename).
+
+get_file(1,'ronde_1').
+get_file(2,'ronde_2').
+get_file(3,'ronde_3').
 
 ignored(ambiente(_,_)).
 

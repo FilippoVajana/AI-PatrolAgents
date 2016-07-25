@@ -1,0 +1,10 @@
+:- module('ronde_1',[ronda/4]).
+
+ronda(r1,p(3,1),e,0) :- !.
+ronda(r1,p(3,2),e,1) :- !.
+ronda(r1,p(3,3),e,2) :- !.
+ronda(r1,p(3,2),o,3) :- !.
+ronda(r1,p(I,J),D,K) :-
+	K > 3, !,
+	H is K mod 4,
+	ronda(r1,p(I,J),D,H).
