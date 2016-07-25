@@ -3,14 +3,16 @@
 		   azzera_clock/0]).
 :- use_module('lib/is_a').
 
-pred clock(integer).
+type [{integer}]: tempo.
+
+pred clock(tempo).
 	%predicato dinamico che identifica l'istante temporale della simulazione
 :- dynamic clock/1.
 
-pred aggiorna_clock().
+pred aggiorna_clock.
 	%fa avanzare di uno step il tempo della simulazione
 
-pred azzera_clock().
+pred azzera_clock.
 	%porta a 0 il tempo della simulazione
 
 clock(0).

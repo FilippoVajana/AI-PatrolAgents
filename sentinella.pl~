@@ -1,14 +1,12 @@
 :- module('sentinella',
-	  [posizione_sentinella/2,
-	   stato_sentinella/3,
-	   sentinella/2,
-	   soldato_avvistato/1]).
+	  [stato_sentinella/3,
+	   soldato_avvistato/3,
+	   area_sentinella/3]).
 :- discontiguous(ignored(_)).
 :- discontiguous sentinella: (pred)/1.
 :- use_module(library(is_a)).
 :- use_module(livello_spec).
 :- use_module(tempo).
-:- consult(livello).
 
 type [s1,s2,s3,s4]: id_sentinella.
 type [r1,r2,r3,r4]: id_ronda.
@@ -18,9 +16,9 @@ pred stato_sentinella(id_sentinella,punto,punto_cardinale).
 %%	Spec: vero sse la sentinella Id si trova attualmente nel punto
 %	Punto e guarda verso Dir
 
-pred soldato_avvistato(id_sentinella).
-	%soldato_avvistato(?S)
-	%rileva se il giocatore e' stato avvistato da una sentinella S
+pred soldato_avvistato(id_sentinella,punto,tempo).
+	%soldato_avvistato(?S,?P,?T)
+	%rileva se il giocatore e' stato avvistato da una sentinella S mentre si trova nel punto P al tempo T
 
 
 
@@ -29,11 +27,11 @@ stato_sentinella(IdSentinella,Posizione,Direzione) :-
 	ronda_sentinella(IdSentinella,IdRonda),
 	ronda(IdRonda,Posizione,Direzione,T).
 
-soldato_avvistato(ID_S) :-
-	livello:position(p(X_G,Y_G)),
-	stato_sentinella(ID_S, p(X_S,Y_S), Direzione),
+soldato_avvistato(S,P,T) :-
+	P = p(X_G,Y_G),
+	ronda(S, p(X_S,Y_S), Direzione, T),
 	area_sentinella(p(X_S,Y_S), Direzione, A),
-	livello:punto_area(p(X_G, Y_G), A).
+	punto_area(p(X_G, Y_G), A).
 
 pred ronda_sentinella(id_sentinella,id_ronda).
 %%	ronda_sentinella(?Sentinella,?Ronda) SEMIDET
@@ -62,7 +60,7 @@ pred area_sentinella(id_sentinella, direzione, area).
 %% PREDICATI RELATIVI A SENTINELLA  %%
 
 area_sentinella(P,Dir,A) :-
-	livello:direzioni(PC,Dir),
+	direzioni(PC,Dir),
 	area_sentinella(P,PC,A).
 area_sentinella(p(I,J),n,area(p(I1,J1),p(I2,J2))) :-
 	I1 is I - 3,

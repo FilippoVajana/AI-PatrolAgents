@@ -266,7 +266,7 @@ aggiorna_conoscenza(st(_P,_G,T), _H, transizione(_S1,_A,_S2)) :-
 
 %  3) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
 %  non c'è nulla da imparare; l'agente non fa nulla
-aggiorna_conoscenza(st(_P,_G,_T), _H, _Evento).
+aggiorna_conoscenza(st(_P,_G), _H, _Evento).
 
 pred trovato_loop(id_sentinella,list(step_ronda(id_sentinella,punto,punto_cardinale,tempo))).
 %%	trovato_loop(+S,-L) SEMIDET

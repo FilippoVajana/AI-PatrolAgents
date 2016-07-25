@@ -91,8 +91,7 @@ carica_mappa(N) :-
 	retractall(position(_)),
 	retractall(goal(_)),
 	retractall(map_size(_)),
-	%% INSERIRE CARICAMENTO RONDE
-	carica_ronde(N),
+	%carica_ronde(N),
 	ambiente(N, A),
 	maplist(atom_chars, A, AA),
 	length(A,NR),
@@ -154,7 +153,7 @@ ambiente(3, [
 'oooooooooo']).
 */
 
-ambiente(3, [
+ambiente(1, [
 'oooooooooo',
 'o   x    o',
 'o        o',

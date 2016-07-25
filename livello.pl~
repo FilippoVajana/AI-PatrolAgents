@@ -91,7 +91,6 @@ carica_mappa(N) :-
 	retractall(position(_)),
 	retractall(goal(_)),
 	retractall(map_size(_)),
-	%% INSERIRE CARICAMENTO RONDE
 	carica_ronde(N),
 	ambiente(N, A),
 	maplist(atom_chars, A, AA),
@@ -113,9 +112,7 @@ store_map(P, Ch) :-
 
 carica_ronde(N) :-
 	get_file(N,Filename),
-	retractall(ronda(_,_)),
-	retractall(sentinella(_,_)),
-	retractall(posizione_sentinella(_,_)),
+	retractall(ronda(_,_,_,_)),
 	consult(Filename).
 
 get_file(1,'ronde_1').
@@ -156,7 +153,7 @@ ambiente(3, [
 'oooooooooo']).
 */
 
-ambiente(3, [
+ambiente(1, [
 'oooooooooo',
 'o   x    o',
 'o        o',
