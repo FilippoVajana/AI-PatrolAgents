@@ -235,9 +235,9 @@ costo(passo(P1,_), passo(P2,_), 1) :-
 % implemento l'euristica usando la distanza in quadretti
 % implementata in livello.pl; il goal è quello memorizzato
 % prima di lanciare la ricerca con solve
-h(passo(P,_),H) :-
+h(passo(P,_T),H) :-
 	current_goal(G),
-	distanza_quadretti(P,G,H).
+	distanza_euclidea(P,G,H).
 
 
 
@@ -344,16 +344,18 @@ decide_se_assumere(step_ronda(S,P,D,T)) :-
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,e), !,
-	area_sentinella(Psent,e,area(p(I1,J1),p(I2,_J2))),
+	area_sentinella(Psent,e,area(p(I1,J1),p(I2,J2))),
 	J1nuovo is J1 + 1,
-	punto_area(P,area(p(I1,J1nuovo),p(I2,J1))),
+	J2nuovo is J2 + 1,
+	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,o), !,
-	area_sentinella(Psent,e,area(p(I1,_J1),p(I2,J2))),
+	area_sentinella(Psent,o,area(p(I1,J1),p(I2,J2))),
+	J1nuovo is J1 - 1,
 	J2nuovo is J2 - 1,
-	punto_area(P,area(p(I1,J2),p(I2,J2nuovo))),
+	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(P,T))).
 
 
