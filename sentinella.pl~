@@ -28,7 +28,8 @@ stato_sentinella(IdSentinella,Posizione,Direzione) :-
 	ronda(IdRonda,Posizione,Direzione,T).
 
 soldato_avvistato(S,p(X_G,Y_G),T) :-
-	ronda(S, p(X_S,Y_S), Direzione, T),
+	ronda_sentinella(S,R),
+	ronda(R, p(X_S,Y_S), Direzione, T),
 	area_sentinella(p(X_S,Y_S), Direzione, A),
 	punto_area(p(X_G, Y_G), A).
 
