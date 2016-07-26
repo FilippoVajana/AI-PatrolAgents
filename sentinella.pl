@@ -27,9 +27,9 @@ stato_sentinella(IdSentinella,Posizione,Direzione) :-
 	ronda_sentinella(IdSentinella,IdRonda),
 	ronda(IdRonda,Posizione,Direzione,T).
 
-soldato_avvistato(S,P,T) :-
-	P = p(X_G,Y_G),
-	ronda(S, p(X_S,Y_S), Direzione, T),
+soldato_avvistato(S,p(X_G,Y_G),T) :-
+	ronda_sentinella(S,R),
+	ronda(R, p(X_S,Y_S), Direzione, T),
 	area_sentinella(p(X_S,Y_S), Direzione, A),
 	punto_area(p(X_G, Y_G), A).
 
@@ -81,9 +81,9 @@ area_sentinella(p(I,J),o,area(p(I1,J1),p(I2,J2))) :-
 	J2 is J - 3.
 area_sentinella(p(I,J),e,area(p(I1,J1),p(I2,J2))) :-
 	I1 is I - 1,
-	J1 is J - 1,
+	J1 is J + 3,
 	I2 is I + 1,
-	J2 is J + 3.
+	J2 is J - 1.
 
 ronda(r1,p(3,1),e,0) :- !.
 ronda(r1,p(3,2),e,1) :- !.

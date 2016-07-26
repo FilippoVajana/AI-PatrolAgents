@@ -91,7 +91,7 @@ carica_mappa(N) :-
 	retractall(position(_)),
 	retractall(goal(_)),
 	retractall(map_size(_)),
-	carica_ronde(N),
+	%carica_ronde(N),
 	ambiente(N, A),
 	maplist(atom_chars, A, AA),
 	length(A,NR),
@@ -160,9 +160,18 @@ ambiente(1, [
 'o        o',
 'o        o',
 'o        o',
-'o      p o',
+'op       o',
 'oooooooooo']).
 
+ambiente(2, [
+'oooooooooo',
+'o   x	  o',
+'o	  o',
+'o        o',
+'o oooooooo',
+'o        o',
+'o      p o',
+'oooooooooo']).
 
 
 

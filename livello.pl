@@ -44,7 +44,7 @@ distanza_quadretti(p(X1,Y1), p(X2,Y2), D) :-
 
 punto_area(p(I,J),area(p(I0,J0),p(I1,J1))) :-
 	between(I0,I1,I),
-	between(J0,J1,J).
+	between(J1,J0,J).
 
 punto_mappa(p(I,J),size(R,C)) :-
 	Rmax is R-1,
@@ -160,9 +160,18 @@ ambiente(1, [
 'o        o',
 'o        o',
 'o        o',
-'o      p o',
+'op       o',
 'oooooooooo']).
 
+ambiente(2, [
+'oooooooooo',
+'o   x	  o',
+'o	  o',
+'o        o',
+'o oooooooo',
+'o        o',
+'o      p o',
+'oooooooooo']).
 
 
 

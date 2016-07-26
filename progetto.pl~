@@ -102,16 +102,12 @@ decidi(st(P0,G,_T),
        vado(P0,G)).
 
 % 2) ho eseguito la decisione precedente _Dec;
-decidi(st(DoveSono,G,T),
-       [eseguita(avanzo(DoveSono,Tprec))|_],
+decidi(st(DoveSono,G,_T),
+       [eseguita(Dec)|_],
        Decisione)
-:- soldato_avvistato(_,DoveSono,T) ->
-   % se sono stato avvistato, termino
-   Decisione = termino(impossibile(avanzo(DoveSono,Tprec)))
-   ;
-   DoveSono = G ->
+:- DoveSono = G ->
    % se la mia posizione è il goal, termino
-   Decisione = termino(eseguita(avanzo(DoveSono,Tprec)))
+   Decisione = termino(eseguita(Dec))
    ;
    %  altrimenti cerco un piano per andare da DoveSono a G
    Decisione = vado(DoveSono,G).
@@ -122,6 +118,11 @@ decidi(_ST,
        [impossibile(vado(P,G))|_],
        % termino tristemente
        termino(impossibile(vado(P,G)))).
+
+% 4) nell'esecuzione del piano sono stato avvistato
+decidi(st(DoveSono,G,_T),
+       fallita(vado(_P0,G),[avanzo(DoveSono,Tprec)|_Storia]),
+       termino(impossibile(avanzo(DoveSono,Tprec)))).
 
 /****** C:   LE AZIONI  *******/
 
@@ -135,7 +136,8 @@ esegui_azione(st(P0,G,T0), _Storia, avanzo(P1,T0), st(P1,G,T1)) :-
 	aggiorna_clock,
 	clock(T1),
 	retract(position(P0)),
-	assert(position(P1)).
+	assert(position(P1)),
+	foreach(stato_sentinella(S,_,_),not(soldato_avvistato(S,P1,T1))).
 
 pred libera(punto).
    %  libera(?P) semidet:    P è una posizione della mappa
@@ -224,9 +226,7 @@ pred pensa_avvistato(id_sentinella,punto,tempo).
 %%	Spec: vero sse l'agente pensa di essere avvistato da S nel punto
 %	P al tempo T
 pensa_avvistato(S,P,T) :-
-	pensa(step_ronda(S,Ps,D,T),_),
-	area_sentinella(Ps,D,A),
-	punto_area(P,A).
+	pensa(punto_sorvegliato(S,P,T),_).
 
 %  implemento il costo, in base a quanto assume l'agente
 %  nello stato di conoscenza attuale
@@ -252,8 +252,9 @@ h(passo(P,_),H) :-
 aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :- !,
 	%  l'agente si guarda in giro e impara (ricorda) cosa
 	%  c'è nel mondo nelle posizioni adiacenti
-	clock(T),
-	forall(stato_sentinella(S,Psent,D),impara(step_ronda(S,Psent,D,T))).
+	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
+					forall(member(Pa,L),
+					       impara(punto_sorvegliato(S,Pa,0))))).
 
 %   2) evento transizione(S1,A,S2,PL). E' stata eseguita la transizione
 %   da S1 a S2, l'agente si trova in una posizione che potrebbe non aver
@@ -261,12 +262,29 @@ aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :- !,
 aggiorna_conoscenza(st(_P,_G,T), _H, transizione(_S1,_A,_S2)) :-
 	!,
 	%  l'agente si guarda in giro e impara (ricorda)
-	forall(trovato_loop(S,ListaStep),impara(ronda(S,ListaStep))),
-	forall(stato_sentinella(S,P,D), impara(step_ronda(S,P,D,T))).
+	clock(T),
+	not(conosce(punto_sorvegliato(_,T))),
+	setof(A,(stato_sentinella(_,P,D),area_sentinella(P,D,A)),ListaAree),
+	forall(member(Area,ListaAree),(punto_area(Punto,Area),
+				       impara(punto_sorvegliato(s1,Punto,T)))).
+
+aggiorna_conoscenza(st(P,G,T), _H, fallita(vado(_,G),[avanzo(P,_Tprec)|_])) :-
+	stato_sentinella(_S,P,D),
+	area_sentinella(P,D,A),
+	setof(Punto,punto_area(Punto,A),ListaPunti),
+	forall(member(P1,ListaPunti),impara(punto_sorvegliato(s1,P1,T))).
 
 %  3) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
 %  non c'è nulla da imparare; l'agente non fa nulla
-aggiorna_conoscenza(st(_P,_G), _H, _Evento).
+aggiorna_conoscenza(st(_P,_G,_T), _H, _Evento).
+
+pred estrai_punti_area(id_sentinella,list(punto)).
+%%	estrai_punti_area(+A,-L) DET
+%%	Spec: vero sse L e' la lista dei punti interni all'area A
+estrai_punti_area(S,L) :-
+	stato_sentinella(S,P,D),
+	area_sentinella(P,D,A),
+	setof(Punto,punto_area(Punto,A),L).
 
 pred trovato_loop(id_sentinella,list(step_ronda(id_sentinella,punto,punto_cardinale,tempo))).
 %%	trovato_loop(+S,-L) SEMIDET
@@ -285,30 +303,58 @@ trovato_loop(S,ListaStep) :-
 % l'agente potrebbe non conoscere e sui quali fa assunzioni
 % il nostro agente esploratore fa assunzioni solo sulla mappa
 % (per le posizioni che non ha ancora visto)
-assumibile(step_ronda(_,_,_,_)).
-assumibile(ronda(_,_)).
+assumibile(punto_sorvegliato(_,_,_)).
 
 % contraria è specificata in vai_if.pl
 % Due assunzioni sulla mappa sono contrarie se assumono due
 % diverse qualità di terreno su una stessa posizione
-contraria(map(P,T1), map(P,T2)) :-
-	T1 \= T2.
 
+contraria(step_ronda(S,_P1,_D1,T),step_ronda(S,_P2,_D2,T)) :-
+	false.
 %  meta è specificata in vai_if.pl e indica i predicati sui quali
 %  avviene il ragionamento basato su assunzioni con il predicato pensa;
 % Il nostro agente pensa solo alla eseguibilità delle azioni, quando
 % decide raggiungibile e libera
-meta(step_ronda(_,_,_,_)).
+meta(punto_sorvegliato(_,_,_)).
 
 %  decide_se_assumere è specificata in vai_if.pl; quando l'agente
 %  deve fare una assunzione, può decidere di non farla e fallire se
 %  vi sono motivi in contrario
 %  Il nostro esploratore ènottimista, assume SEMPTE che le posizioni che
 %  non conosce siano libere
-decide_se_assumere(step_ronda(S,P,D,_T)) :-
-	stato_sentinella(S,P0,D),
+/*
+decide_se_assumere(step_ronda(S,P,D,T)) :-
+	conosce(ronda(S,ListaStep)), !,
+	member(step_ronda(S,P,D,T1),ListaStep),
+	T1 < T,
+	assert(assunto(step_ronda(S,P,D,T))).
+decide_se_assumere(step_ronda(S,P,D,0)) :-
+	assert(assunto(step_ronda(S,P,D,0))),!.
+decide_se_assumere(step_ronda(S,P,D,T)) :-
+	libera(P),
+	T0 is T - 1,
+	pensa(step_ronda(S,P0,_D0,T0),_),
+	next(P0,Dir,P,1),
+	direzioni(D,Dir),
 	adiacenti(P0,Ad),
-	member(P,Ad).
+	member(P,Ad),
+	assert(assunto(step_ronda(S,P,D,T))).
+*/
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	libera(P),
+	stato_sentinella(S,Psent,e), !,
+	area_sentinella(Psent,e,area(p(I1,J1),p(I2,_J2))),
+	J1nuovo is J1 + 1,
+	punto_area(P,area(p(I1,J1nuovo),p(I2,J1))),
+	assert(assunto(punto_sorvegliato(P,T))).
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	libera(P),
+	stato_sentinella(S,Psent,o), !,
+	area_sentinella(Psent,e,area(p(I1,_J1),p(I2,J2))),
+	J2nuovo is J2 - 1,
+	punto_area(P,area(p(I1,J2),p(I2,J2nuovo))),
+	assert(assunto(punto_sorvegliato(P,T))).
+
 
 
 %  Visualizzazione della conoscenza in fase di debugging
