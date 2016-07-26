@@ -120,9 +120,9 @@ decidi(_ST,
        termino(impossibile(vado(P,G)))).
 
 % 4) nell'esecuzione del piano sono stato avvistato
-decidi(st(DoveSono,G,_T),
-       fallita(vado(_P0,G),[avanzo(DoveSono,Tprec)|_Storia]),
-       termino(impossibile(avanzo(DoveSono,Tprec)))).
+decidi(st(_DoveSono,G,_T),
+       [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
+       termino(impossibile(avanzo(P,Tprec)))).
 
 /****** C:   LE AZIONI  *******/
 
@@ -168,11 +168,10 @@ cerca_un_piano(P, G, Piano) :-
 	retractall(current_goal(_)),
 	assert(current_goal(G)),
 	%   USO solve imlementato nel modulo ricerca mr.pl
-	clock(T),
-	solve(passo(P,T), Sol, =(passo(G,_))),
+	solve(P, Sol, =(G)),
 	estrai_piano(Sol,Piano).
 
-type [nc(passo(punto,tempo),list(passo(punto,tempo)),number)]:nodo.
+type [nc(punto,list(punto),number)]:nodo.
 %  non stiamo a importare tutti i tipi di search_spec.pl
 %  qui ci basta questo
 pred estrai_piano(nodo, list(decisione)).
@@ -183,13 +182,14 @@ estrai_piano(nc(G,RevPath,_C), Piano) :-
 	% faccio la reverse perchè il path è dal
 	% nodo alla radice e quindi in senso inverso
 	reverse([G|RevPath], [_Start|Path]),
-	path2moves(Path, Piano).
+	clock(T),
+	path2moves(Path, Piano, T).
 
-pred path2moves(list(passo(punto,tempo)), list(decisione)).
-path2moves([passo(P,T)|Path],[avanzo(P,Tprec)|MovList]) :-
-	Tprec is T - 1,
-	path2moves(Path,MovList).
-path2moves([],[]).
+pred path2moves(list(punto), list(decisione),tempo).
+path2moves([P|Path],[avanzo(P,T)|MovList],T) :-
+	Tnext is T + 1,
+	path2moves(Path,MovList,Tnext).
+path2moves([],[],_).
 
 
 /*****  D1.  APPLICAZIONE DI A* e del ragionamento basato su
@@ -203,12 +203,24 @@ path2moves([],[]).
 *************************************************************/
 
 %  implemento vicini, richiesto dall'interfaccia search_if
-vicini(passo(P,T), V) :-
-	T1 is T	+ 1,
-	setof(passo(P1,T1), pensa_sicuro(P, P1, T), V),
+vicini(P, V) :-
+	tempo_di_percorrenza(P,T),
+	setof(P1, pensa_sicuro(P, P1, T), V),
 	!
 	;
 	V=[].
+
+pred tempo_di_percorrenza(punto,tempo).
+%%	tempo_di_percorrenza(+P,-T) DET
+%%	Spec: vero sse T e' il tempo che l'agente ipotizza impieghera' a
+%	percorrere la distanza che lo separa da P
+tempo_di_percorrenza(P,T) :-
+	position(P0),
+	manhattan(P,P0,M),
+	clock(T0),
+	T is T0 + M.
+manhattan(p(I1,J1),p(I2,J2),M) :-
+	M is abs(I1 - I2) + abs(J1 - J2).
 
 pred pensa_sicuro(punto,punto,tempo).
 %  pensa_sicuro(+P1, -P2) nondet
@@ -230,14 +242,14 @@ pensa_avvistato(S,P,T) :-
 
 %  implemento il costo, in base a quanto assume l'agente
 %  nello stato di conoscenza attuale
-costo(passo(P1,_), passo(P2,_), 1) :-
+costo(P1,P2, 1) :-
 	P1 \== P2.
 % implemento l'euristica usando la distanza in quadretti
 % implementata in livello.pl; il goal è quello memorizzato
 % prima di lanciare la ricerca con solve
-h(passo(P,_),H) :-
+h(P,H) :-
 	current_goal(G),
-	distanza_quadretti(P,G,H).
+	distanza_euclidea(P,G,H).
 
 
 
@@ -249,10 +261,10 @@ h(passo(P,_),H) :-
 
 %  1) evento inizio_storia(_). All'inizio l'agente si trova in una
 %  posizione che, almeno nella prima escuzione, è nuova
-aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :- !,
+aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :-
 	%  l'agente si guarda in giro e impara (ricorda) cosa
 	%  c'è nel mondo nelle posizioni adiacenti
-	not(conosce(punto_sorvegliato(_,_,0))),
+	not(conosce(punto_sorvegliato(_,_,0))), !,
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),
 					       impara(punto_sorvegliato(S,Pa,0))))).
@@ -260,7 +272,7 @@ aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :- !,
 %   2) evento transizione(S1,A,S2,PL). E' stata eseguita la transizione
 %   da S1 a S2, l'agente si trova in una posizione che potrebbe non aver
 %   mai visto prima
-aggiorna_conoscenza(st(_P,_G,T), _H, transizione(_S1,_A,_S2)) :-
+aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	!,
 	%  l'agente si guarda in giro e impara (ricorda)
 	clock(T),
@@ -344,16 +356,18 @@ decide_se_assumere(step_ronda(S,P,D,T)) :-
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,e), !,
-	area_sentinella(Psent,e,area(p(I1,J1),p(I2,_J2))),
+	area_sentinella(Psent,e,area(p(I1,J1),p(I2,J2))),
 	J1nuovo is J1 + 1,
-	punto_area(P,area(p(I1,J1nuovo),p(I2,J1))),
+	J2nuovo is J2 + 1,
+	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,o), !,
-	area_sentinella(Psent,e,area(p(I1,_J1),p(I2,J2))),
+	area_sentinella(Psent,o,area(p(I1,J1),p(I2,J2))),
+	J1nuovo is J1 - 1,
 	J2nuovo is J2 - 1,
-	punto_area(P,area(p(I1,J2),p(I2,J2nuovo))),
+	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(P,T))).
 
 
@@ -363,20 +377,20 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 %  ( specifica in livello.pl);
 %  invece di usare map, usa ciò che conosce o ha assunto su map
 
-/*
+
 mappa_agente(P,Ch) :-
 	position(P), !, Ch=x
 	%  indico con x la posizione dell'agente
 	;
-	goal(P),!, Ch=g
+	goal(P),!, Ch=p
 	%  indico con g laposizione del goal
 	;
-	conosce(map(P,Ch)), !
-	%  uso il carattere Ch della mappa, che l'agente conosce
+	map(P,'o'),!, Ch=o
 	;
-	assunto(map(P,_)), Ch='?'.
-        %  indico con ? le posizioni che l'agente assume libere
-        %  ma non conosce
+	stato_sentinella(_,Ps,Ds),
+	area_sentinella(Ps,Ds,A),
+	punto_area(P,A),!,
+	Ch = '*'.
 
 mostra_conoscenza :-
 	%  riscrivo mostra_conoscenza di default, forendo
@@ -384,7 +398,7 @@ mostra_conoscenza :-
 	%  uso mostra_mappa definita in livello.pl
 	mostra_mappa(mappa_agente).
 
-*/
+
 
 
 

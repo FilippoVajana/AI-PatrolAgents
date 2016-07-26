@@ -76,7 +76,7 @@ mostra_mappa(Map, size(R,C)) :-
 	Columns is C-1,
 	forall(between(0,Rows,I),
 	       (   forall(between(0,Columns,J), (
-			      call(Map,p(I,J),E) -> write(E); write('-'))),
+			      call(Map,p(I,J),E) -> write(E); write(' '))),
 		   nl
 	       )).
 
