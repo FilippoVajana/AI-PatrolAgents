@@ -279,9 +279,8 @@ aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	clock(T),
 	not(conosce(punto_sorvegliato(_,T))),
 	setof(A,(stato_sentinella(_,P,D),area_sentinella(P,D,A)),ListaAree),
-	forall(member(Area,ListaAree),(
-		   forall(punto_area(Punto,Area),
-				       impara(punto_sorvegliato(s1,Punto,T))))).
+	forall(member(Area,ListaAree),(punto_area(Punto,Area),
+				       impara(punto_sorvegliato(s1,Punto,T)))).
 
 aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,Tprec)|_])) :-
 	% NOTA: bisogna sapere quale sentinella mi ha visto
