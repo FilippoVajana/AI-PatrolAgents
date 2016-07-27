@@ -299,19 +299,6 @@ estrai_punti_area(S,L) :-
 	area_sentinella(P,D,A),
 	setof(Punto,punto_area(Punto,A),L).
 
-pred trovato_loop(id_sentinella,list(step_ronda(id_sentinella,punto,punto_cardinale,tempo))).
-%%	trovato_loop(+S,-L) SEMIDET
-%%	Spec: vero sse L e' una lista di step che descrivono un percorso
-%	ripetuto dalla sentinella S
-trovato_loop(S,ListaStep) :-
-	not(conosce(ronda(S,_))),
-	clock(T),
-	stato_sentinella(S,P,D),
-	conosce(step_ronda(S,P,D,Tprec)),
-	setof(step_ronda(S,P1,D1,T1),
-	      (	  conosce(step_ronda(S,P1,D1,T1)),between(Tprec,T,T1)),
-	      ListaStep).
-
 % assumibile è specificata in vai_if.pl; sono i predicati che
 % l'agente potrebbe non conoscere e sui quali fa assunzioni
 % il nostro agente esploratore fa assunzioni solo sulla mappa
@@ -335,24 +322,6 @@ meta(punto_sorvegliato(_,_,_)).
 %  vi sono motivi in contrario
 %  Il nostro esploratore ènottimista, assume SEMPTE che le posizioni che
 %  non conosce siano libere
-/*
-decide_se_assumere(step_ronda(S,P,D,T)) :-
-	conosce(ronda(S,ListaStep)), !,
-	member(step_ronda(S,P,D,T1),ListaStep),
-	T1 < T,
-	assert(assunto(step_ronda(S,P,D,T))).
-decide_se_assumere(step_ronda(S,P,D,0)) :-
-	assert(assunto(step_ronda(S,P,D,0))),!.
-decide_se_assumere(step_ronda(S,P,D,T)) :-
-	libera(P),
-	T0 is T - 1,
-	pensa(step_ronda(S,P0,_D0,T0),_),
-	next(P0,Dir,P,1),
-	direzioni(D,Dir),
-	adiacenti(P0,Ad),
-	member(P,Ad),
-	assert(assunto(step_ronda(S,P,D,T))).
-*/
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,e), !,
@@ -369,6 +338,22 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	J2nuovo is J2 - 1,
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(P,T))).
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	libera(P),
+	stato_sentinella(S,Psent,n), !,
+	area_sentinella(Psent,n,area(p(I1,J1),p(I2,J2))),
+	I1nuovo is I1 - 1,
+	I2nuovo is I2 - 1,
+	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
+	assert(assunto(punto_sorvegliato(S,P,T))).
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	libera(P),
+	stato_sentinella(S,Psent,s), !,
+	area_sentinella(Psent,s,area(p(I1,J1),p(I2,J2))),
+	I1nuovo is I1 + 1,
+	I2nuovo is I2 + 1,
+	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
+	assert(assunto(punto_sorvegliato(S,P,T))).
 
 
 

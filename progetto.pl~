@@ -121,7 +121,7 @@ decidi(_ST,
 
 % 4) nell'esecuzione del piano sono stato avvistato
 decidi(st(_DoveSono,G,_T),
-       fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia]),
+       [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
        termino(impossibile(avanzo(P,Tprec)))).
 
 /****** C:   LE AZIONI  *******/
