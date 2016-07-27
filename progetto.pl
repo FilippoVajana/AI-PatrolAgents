@@ -119,7 +119,8 @@ decidi(_ST,
        % termino tristemente
        termino(impossibile(vado(P,G)))).
 
-% 4) nell'esecuzione del piano sono stato avvistato
+% 4) nell'esecuzione del piano sono stato avvistato: faccio un passo
+% indietro e ripianifico.
 decidi(st(_DoveSono,G,_T),
        [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
        termino(impossibile(avanzo(P,Tprec)))).
@@ -281,11 +282,10 @@ aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	forall(member(Area,ListaAree),(punto_area(Punto,Area),
 				       impara(punto_sorvegliato(s1,Punto,T)))).
 
-aggiorna_conoscenza(st(P,G,T), _H, fallita(vado(_,G),[avanzo(P,_Tprec)|_])) :-
-	stato_sentinella(_S,P,D),
-	area_sentinella(P,D,A),
-	setof(Punto,punto_area(Punto,A),ListaPunti),
-	forall(member(P1,ListaPunti),impara(punto_sorvegliato(s1,P1,T))).
+aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,Tprec)|_])) :-
+	% NOTA: bisogna sapere quale sentinella mi ha visto
+	T is Tprec + 1,
+	impara(punto_sorvegliato(s1,Dest,T)).
 
 %  3) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
 %  non c'è nulla da imparare; l'agente non fa nulla
@@ -309,8 +309,7 @@ assumibile(punto_sorvegliato(_,_,_)).
 % Due assunzioni sulla mappa sono contrarie se assumono due
 % diverse qualità di terreno su una stessa posizione
 
-contraria(step_ronda(S,_P1,_D1,T),step_ronda(S,_P2,_D2,T)) :-
-	false.
+contraria(_,_):- false.
 %  meta è specificata in vai_if.pl e indica i predicati sui quali
 %  avviene il ragionamento basato su assunzioni con il predicato pensa;
 % Il nostro agente pensa solo alla eseguibilità delle azioni, quando

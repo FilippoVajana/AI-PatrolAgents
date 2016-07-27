@@ -119,10 +119,11 @@ decidi(_ST,
        % termino tristemente
        termino(impossibile(vado(P,G)))).
 
-% 4) nell'esecuzione del piano sono stato avvistato
-decidi(st(_DoveSono,G,_T),
-       [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
-       termino(impossibile(avanzo(P,Tprec)))).
+% 4) nell'esecuzione del piano sono stato avvistato: faccio un passo
+% indietro e ripianifico.
+decidi(st(DoveSono,G,_T),
+       [fallita(vado(_P0,G),[avanzo(_,_Tprec)|_Storia])|_],
+       vado(DoveSono,G)).
 
 /****** C:   LE AZIONI  *******/
 
@@ -281,11 +282,10 @@ aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	forall(member(Area,ListaAree),(punto_area(Punto,Area),
 				       impara(punto_sorvegliato(s1,Punto,T)))).
 
-aggiorna_conoscenza(st(P,G,T), _H, fallita(vado(_,G),[avanzo(P,_Tprec)|_])) :-
-	stato_sentinella(_S,P,D),
-	area_sentinella(P,D,A),
-	setof(Punto,punto_area(Punto,A),ListaPunti),
-	forall(member(P1,ListaPunti),impara(punto_sorvegliato(s1,P1,T))).
+aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,Tprec)|_])) :-
+	% NOTA: bisogna sapere quale sentinella mi ha visto
+	T is Tprec + 1,
+	impara(punto_sorvegliato(s1,Dest,T)).
 
 %  3) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
 %  non c'è nulla da imparare; l'agente non fa nulla
@@ -299,19 +299,6 @@ estrai_punti_area(S,L) :-
 	area_sentinella(P,D,A),
 	setof(Punto,punto_area(Punto,A),L).
 
-pred trovato_loop(id_sentinella,list(step_ronda(id_sentinella,punto,punto_cardinale,tempo))).
-%%	trovato_loop(+S,-L) SEMIDET
-%%	Spec: vero sse L e' una lista di step che descrivono un percorso
-%	ripetuto dalla sentinella S
-trovato_loop(S,ListaStep) :-
-	not(conosce(ronda(S,_))),
-	clock(T),
-	stato_sentinella(S,P,D),
-	conosce(step_ronda(S,P,D,Tprec)),
-	setof(step_ronda(S,P1,D1,T1),
-	      (	  conosce(step_ronda(S,P1,D1,T1)),between(Tprec,T,T1)),
-	      ListaStep).
-
 % assumibile è specificata in vai_if.pl; sono i predicati che
 % l'agente potrebbe non conoscere e sui quali fa assunzioni
 % il nostro agente esploratore fa assunzioni solo sulla mappa
@@ -322,8 +309,7 @@ assumibile(punto_sorvegliato(_,_,_)).
 % Due assunzioni sulla mappa sono contrarie se assumono due
 % diverse qualità di terreno su una stessa posizione
 
-contraria(step_ronda(S,_P1,_D1,T),step_ronda(S,_P2,_D2,T)) :-
-	false.
+contraria(_,_):- false.
 %  meta è specificata in vai_if.pl e indica i predicati sui quali
 %  avviene il ragionamento basato su assunzioni con il predicato pensa;
 % Il nostro agente pensa solo alla eseguibilità delle azioni, quando
@@ -335,24 +321,6 @@ meta(punto_sorvegliato(_,_,_)).
 %  vi sono motivi in contrario
 %  Il nostro esploratore ènottimista, assume SEMPTE che le posizioni che
 %  non conosce siano libere
-/*
-decide_se_assumere(step_ronda(S,P,D,T)) :-
-	conosce(ronda(S,ListaStep)), !,
-	member(step_ronda(S,P,D,T1),ListaStep),
-	T1 < T,
-	assert(assunto(step_ronda(S,P,D,T))).
-decide_se_assumere(step_ronda(S,P,D,0)) :-
-	assert(assunto(step_ronda(S,P,D,0))),!.
-decide_se_assumere(step_ronda(S,P,D,T)) :-
-	libera(P),
-	T0 is T - 1,
-	pensa(step_ronda(S,P0,_D0,T0),_),
-	next(P0,Dir,P,1),
-	direzioni(D,Dir),
-	adiacenti(P0,Ad),
-	member(P,Ad),
-	assert(assunto(step_ronda(S,P,D,T))).
-*/
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,e), !,
@@ -369,6 +337,22 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	J2nuovo is J2 - 1,
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(P,T))).
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	libera(P),
+	stato_sentinella(S,Psent,n), !,
+	area_sentinella(Psent,n,area(p(I1,J1),p(I2,J2))),
+	I1nuovo is I1 - 1,
+	I2nuovo is I2 - 1,
+	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
+	assert(assunto(punto_sorvegliato(S,P,T))).
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	libera(P),
+	stato_sentinella(S,Psent,s), !,
+	area_sentinella(Psent,s,area(p(I1,J1),p(I2,J2))),
+	I1nuovo is I1 + 1,
+	I2nuovo is I2 + 1,
+	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
+	assert(assunto(punto_sorvegliato(S,P,T))).
 
 
 
