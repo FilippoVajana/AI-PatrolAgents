@@ -121,9 +121,9 @@ decidi(_ST,
 
 % 4) nell'esecuzione del piano sono stato avvistato: faccio un passo
 % indietro e ripianifico.
-decidi(st(DoveSono,G,_T),
-       [fallita(vado(_P0,G),[avanzo(_,_Tprec)|_Storia])|_],
-       vado(DoveSono,G)).
+decidi(st(_DoveSono,G,_T),
+       [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
+       termino(impossibile(avanzo(P,Tprec)))).
 
 /****** C:   LE AZIONI  *******/
 
