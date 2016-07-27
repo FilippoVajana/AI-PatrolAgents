@@ -165,8 +165,8 @@ ambiente(1, [
 
 ambiente(2, [
 'oooooooooo',
-'o   x	  o',
-'o	  o',
+'o   x    o',
+'o        o',
 'o        o',
 'o oooooooo',
 'o        o',
