@@ -134,11 +134,13 @@ azione(avanzo(_,_)).
 % la posizione in cui devo andare è visibile; se libera
 % ci vado, altrimenti fallisco
 esegui_azione(st(P0,G,T0), _Storia, avanzo(P1,T0), st(P1,G,T1)) :-
+	Tnext is T0 + 1,
+	foreach(stato_sentinella(S,_,_),not(soldato_avvistato(S,P1,Tnext))),
 	aggiorna_clock,
 	clock(T1),
 	retract(position(P0)),
-	assert(position(P1)),
-	foreach(stato_sentinella(S,_,_),not(soldato_avvistato(S,P1,T1))).
+	assert(position(P1)).
+	% foreach(stato_sentinella(S,_,_),not(soldato_avvistato(S,P1,T1))).
 
 pred libera(punto).
    %  libera(?P) semidet:    P è una posizione della mappa
@@ -265,28 +267,47 @@ h(P,H) :-
 aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :-
 	%  l'agente si guarda in giro e impara (ricorda) cosa
 	%  c'è nel mondo nelle posizioni adiacenti
-	not(conosce(punto_sorvegliato(_,_,0))), !,
+	!, forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
+					forall(member(Pa,L),(
+						   not(conosce(punto_sorvegliato(S,Pa,0))) ->
+						   impara(punto_sorvegliato(S,Pa,0)))))).
+/*
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),
-					       impara(punto_sorvegliato(S,Pa,0))))).
-
+					       (   impara(punto_sorvegliato(S,Pa,0)),
+					       retractall(assunto(punto_sorvegliato(S,Pa,0))))))).
+*/
 %   2) evento transizione(S1,A,S2,PL). E' stata eseguita la transizione
 %   da S1 a S2, l'agente si trova in una posizione che potrebbe non aver
 %   mai visto prima
 aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
-	!,
 	%  l'agente si guarda in giro e impara (ricorda)
-	clock(T),
-	not(conosce(punto_sorvegliato(_,T))),
-	setof(A,(stato_sentinella(_,P,D),area_sentinella(P,D,A)),ListaAree),
-	forall(member(Area,ListaAree),(punto_area(Punto,Area),
-				       impara(punto_sorvegliato(s1,Punto,T)))).
-
-aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,Tprec)|_])) :-
+	!, clock(T),
+	% not(conosce(punto_sorvegliato(_,T))),
+	% setof(A,(stato_sentinella(_,P,D),area_sentinella(P,D,A)),ListaAree),
+	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
+					forall(member(Pa,L),(
+						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
+						   impara(punto_sorvegliato(S,Pa,T)))))).
+/*
+	forall(member(Area,ListaAree),(
+		   forall(punto_area(Punto,Area),
+				       (   impara(punto_sorvegliato(s1,Punto,T)),
+					   retractall(assunto(punto_sorvegliato(s1,Punto,T))))))).
+*/
+aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,_)|_])) :-
 	% NOTA: bisogna sapere quale sentinella mi ha visto
+	!, clock(T),
+	Tnext is T + 1,
+	soldato_avvistato(S,Dest,Tnext),
+	not(conosce(punto_sorvegliato(S,Dest,Tnext))) ->
+	impara(punto_sorvegliato(S,Dest,Tnext)).
+/*
 	T is Tprec + 1,
-	impara(punto_sorvegliato(s1,Dest,T)).
-
+	not(conosce(punto_sorvegliato(s1,Dest,T))),
+	impara(punto_sorvegliato(s1,Dest,T)),
+	retractall(assunto(punto_sorvegliato(s1,_,T))).
+*/
 %  3) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
 %  non c'è nulla da imparare; l'agente non fa nulla
 aggiorna_conoscenza(st(_P,_G,_T), _H, _Evento).

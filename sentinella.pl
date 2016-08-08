@@ -37,11 +37,9 @@ pred ronda_sentinella(id_sentinella,id_ronda).
 %%	ronda_sentinella(?Sentinella,?Ronda) SEMIDET
 %%	Spec: vero sse Ronda e' la ronda seguita da Sentinella
 ronda_sentinella(s1,r1).
-/*
 ronda_sentinella(s2,r2).
 ronda_sentinella(s3,r3).
 ronda_sentinella(s4,r4).
-*/
 
 pred ronda(id_ronda,punto,direzione,tempo).
 %%	ronda(?R,?P,?D,?T) SEMIDET
