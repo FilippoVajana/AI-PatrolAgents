@@ -78,6 +78,7 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	azzera_clock,
 	clock(T),
 	carica_mappa(I),
+	carica_ronda(I),
 	position(P0),
 	goal(G),
 	(   ultima(I) ->

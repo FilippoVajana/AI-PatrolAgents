@@ -267,10 +267,11 @@ h(P,H) :-
 aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :-
 	%  l'agente si guarda in giro e impara (ricorda) cosa
 	%  c'è nel mondo nelle posizioni adiacenti
-	!, forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
+	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),(
 						   not(conosce(punto_sorvegliato(S,Pa,0))) ->
-						   impara(punto_sorvegliato(S,Pa,0)))))).
+						   impara(punto_sorvegliato(S,Pa,0)))))),
+	!.
 /*
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),
@@ -282,13 +283,14 @@ aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :-
 %   mai visto prima
 aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	%  l'agente si guarda in giro e impara (ricorda)
-	!, clock(T),
+	clock(T),
 	% not(conosce(punto_sorvegliato(_,T))),
 	% setof(A,(stato_sentinella(_,P,D),area_sentinella(P,D,A)),ListaAree),
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),(
 						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
-						   impara(punto_sorvegliato(S,Pa,T)))))).
+						   impara(punto_sorvegliato(S,Pa,T)))))),
+	!.
 /*
 	forall(member(Area,ListaAree),(
 		   forall(punto_area(Punto,Area),
@@ -297,11 +299,12 @@ aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 */
 aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,_)|_])) :-
 	% NOTA: bisogna sapere quale sentinella mi ha visto
-	!, clock(T),
+	clock(T),
 	Tnext is T + 1,
 	soldato_avvistato(S,Dest,Tnext),
 	not(conosce(punto_sorvegliato(S,Dest,Tnext))) ->
-	impara(punto_sorvegliato(S,Dest,Tnext)).
+	impara(punto_sorvegliato(S,Dest,Tnext)),
+	!.
 /*
 	T is Tprec + 1,
 	not(conosce(punto_sorvegliato(s1,Dest,T))),
