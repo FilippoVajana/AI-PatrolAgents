@@ -47,8 +47,12 @@ gen [st(punto, punto, tempo)]:stato.
 /******   Le decisioni dell'agente  */
 gen [vado(punto, punto),
        % decisione vado(P,G): cerco un piano per andare da P a G
+     attesa,
+       % decisione attesa: il percorso non e' sicuro, aspetto tre secondi per vedere se lo diventa
      avanzo(punto,tempo),
        % azione avanzo(P,T): avanzo nel punto indicato e nel tempo T
+     aspetto,
+       % azione aspetto: resto fermo per un secondo
      termino(evento)
     ]: decisione.
 
@@ -104,11 +108,11 @@ decidi(st(P0,G,_T),
 
 % 2) ho eseguito la decisione precedente _Dec;
 decidi(st(DoveSono,G,_T),
-       [eseguita(Dec)|_],
+       [eseguita(vado(P,G))|_],
        Decisione)
 :- DoveSono = G ->
    % se la mia posizione è il goal, termino
-   Decisione = termino(eseguita(Dec))
+   Decisione = termino(eseguita(vado(P,G)))
    ;
    %  altrimenti cerco un piano per andare da DoveSono a G
    Decisione = vado(DoveSono,G).
@@ -116,20 +120,24 @@ decidi(st(DoveSono,G,_T),
 % 3) nella ricerca del piano ho verificato l'impossibilita'
 % di raggiungere il goal
 decidi(_ST,
-       [impossibile(vado(P,G))|_],
+       [impossibile(vado(P,G)),eseguita(attesa)|_],
        % termino tristemente
-       termino(impossibile(vado(P,G)))).
+       termino(impossibile(vado(P,G)))):- !.
+decidi(_ST,
+       [impossibile(vado(_,_))|_],
+       attesa).
 
 % 4) nell'esecuzione del piano sono stato avvistato: faccio un passo
 % indietro e ripianifico.
-decidi(st(_DoveSono,G,_T),
-       [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
-       termino(impossibile(avanzo(P,Tprec)))).
+decidi(st(DoveSono,G,_T),
+       [fallita(vado(_P0,G),[avanzo(_P,_Tprec)|_Storia])|_],
+       vado(DoveSono,G)).
 
 /****** C:   LE AZIONI  *******/
 
 % azione è specificato in vai_if;  le azioni sono le seguenti:
 azione(avanzo(_,_)).
+azione(aspetto).
 
 % esegui_azione è specificato in vai_if;
 % la posizione in cui devo andare è visibile; se libera
@@ -141,7 +149,11 @@ esegui_azione(st(P0,G,T0), _Storia, avanzo(P1,T0), st(P1,G,T1)) :-
 	clock(T1),
 	retract(position(P0)),
 	assert(position(P1)).
-	% foreach(stato_sentinella(S,_,_),not(soldato_avvistato(S,P1,T1))).
+esegui_azione(st(P,G,T0), _Storia, aspetto, st(P,G,T1)) :-
+	Tnext is T0 + 1,
+	foreach(stato_sentinella(S,_,_),not(soldato_avvistato(S,P,Tnext))),
+	aggiorna_clock,
+	clock(T1).
 
 pred libera(punto).
    %  libera(?P) semidet:    P è una posizione della mappa
@@ -157,6 +169,7 @@ libera(P) :-
 % 1) ho deciso di cercare un piano per andare da P a G, lo cerco
 piano(_ST, _Storia, vado(P,G), Piano):-
 	cerca_un_piano(P, G, Piano).
+piano(_ST, _Storia, attesa, [aspetto,aspetto,aspetto]).
 
 pred cerca_un_piano(punto,punto, list(decisione)).
 %  cerca_un_piano(+P, +G, -Piano) semidet

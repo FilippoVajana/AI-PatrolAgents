@@ -176,6 +176,17 @@ ambiente(2, [
 'o      p o',
 'oooooooooo']).
 
+ambiente(3, [
+'oooooooooo',
+'o x      o',
+'o        o',
+'o        o',
+'o        o',
+'o        o',
+'o        o',
+'op       o',
+'oooooooooo']).
+
 
 
 

@@ -47,8 +47,12 @@ gen [st(punto, punto, tempo)]:stato.
 /******   Le decisioni dell'agente  */
 gen [vado(punto, punto),
        % decisione vado(P,G): cerco un piano per andare da P a G
+     attesa,
+       % decisione attesa: il percorso non e' sicuro, aspetto tre secondi per vedere se lo diventa
      avanzo(punto,tempo),
        % azione avanzo(P,T): avanzo nel punto indicato e nel tempo T
+     aspetto,
+       % azione aspetto: resto fermo per un secondo
      termino(evento)
     ]: decisione.
 
@@ -78,6 +82,7 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	azzera_clock,
 	clock(T),
 	carica_mappa(I),
+	carica_ronda(I),
 	position(P0),
 	goal(G),
 	(   ultima(I) ->
@@ -103,11 +108,11 @@ decidi(st(P0,G,_T),
 
 % 2) ho eseguito la decisione precedente _Dec;
 decidi(st(DoveSono,G,_T),
-       [eseguita(Dec)|_],
+       [eseguita(vado(P,G))|_],
        Decisione)
 :- DoveSono = G ->
    % se la mia posizione è il goal, termino
-   Decisione = termino(eseguita(Dec))
+   Decisione = termino(eseguita(vado(P,G)))
    ;
    %  altrimenti cerco un piano per andare da DoveSono a G
    Decisione = vado(DoveSono,G).
@@ -115,15 +120,18 @@ decidi(st(DoveSono,G,_T),
 % 3) nella ricerca del piano ho verificato l'impossibilita'
 % di raggiungere il goal
 decidi(_ST,
-       [impossibile(vado(P,G))|_],
+       [impossibile(vado(P,G)),eseguita(attesa)|_],
        % termino tristemente
-       termino(impossibile(vado(P,G)))).
+       termino(impossibile(vado(P,G)))):- !.
+decidi(_ST,
+       [impossibile(vado(_,_))|_],
+       attesa).
 
 % 4) nell'esecuzione del piano sono stato avvistato: faccio un passo
 % indietro e ripianifico.
-decidi(st(_DoveSono,G,_T),
-       [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
-       termino(impossibile(avanzo(P,Tprec)))).
+decidi(st(DoveSono,G,_T),
+       [fallita(vado(_P0,G),[avanzo(_P,_Tprec)|_Storia])|_],
+       vado(DoveSono,G)).
 
 /****** C:   LE AZIONI  *******/
 
