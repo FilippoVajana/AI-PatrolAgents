@@ -109,16 +109,6 @@ store_map(P,p) :- !,
 store_map(P, Ch) :-
 	assert(map(P,Ch)).
 
-carica_ronde(N) :-
-	get_file(N,Filename),
-	retractall(ronda(_,_,_,_)),
-	consult(Filename).
-
-get_file(1,'ronde_1').
-get_file(2,'ronde_2').
-get_file(3,'ronde_3').
-get_file(4,'ronde_4').
-
 ignored(ambiente(_,_)).
 
 ambiente(1, [
@@ -145,17 +135,17 @@ ambiente(2, [
 'oooooooooo']).
 
 ambiente(3,[
-'oooooooooooo',
-'o x      p o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'oooooooooooo']).
+'ooooooooooo',
+'o x       o',
+'o      oooo',
+'o      oooo',
+'o        po',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'ooooooooooo']).
 
 ambiente(4, [
 'oooooooooo',

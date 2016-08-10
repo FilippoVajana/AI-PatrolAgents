@@ -135,17 +135,17 @@ ambiente(2, [
 'oooooooooo']).
 
 ambiente(3,[
-'oooooooooooo',
-'o x      p o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'o          o',
-'oooooooooooo']).
+'ooooooooooo',
+'o         o',
+'o      oooo',
+'o x    oooo',
+'o        po',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'ooooooooooo']).
 
 ambiente(4, [
 'oooooooooo',

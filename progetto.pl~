@@ -54,7 +54,7 @@ gen [vado(punto, punto),
 
 gen [map(punto, terreno)]: assumibile.
 
-/***  A:  inizialiizzazioni  *****/
+/***  A:  inizializzazioni  *****/
 
 pred clear_knowledge.
 % comando qui introdotto per azzerare la conoscenza, che altrimenti
@@ -120,8 +120,8 @@ decidi(_ST,
        % termino tristemente
        termino(impossibile(vado(P,G)))).
 
-% 4) nell'esecuzione del piano sono stato avvistato: faccio un passo
-% indietro e ripianifico.
+% 4) nell'esecuzione del piano sono stato
+% avvistato, quindi termino.
 decidi(st(_DoveSono,G,_T),
        [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
        termino(impossibile(avanzo(P,Tprec)))).
@@ -331,7 +331,7 @@ assumibile(punto_sorvegliato(_,_,_)).
 % diverse qualità di terreno su una stessa posizione
 
 %%	contraria(assunzione,conoscenza)
-contraria(punto_sorvegliato(S,P,T),punto_sorvegliato(S,P,T)).
+contraria(punto_sorvegliato(S,_,T),punto_sorvegliato(S,P,T)).
 %  meta è specificata in vai_if.pl e indica i predicati sui quali
 %  avviene il ragionamento basato su assunzioni con il predicato pensa;
 % Il nostro agente pensa solo alla eseguibilità delle azioni, quando
@@ -376,7 +376,12 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 
-
+pred ragionamento_det.
+%%	attiva il ragionamento deterministico: la ronda e' solo una per
+%	ogni sentinella.
+pred ragionamento_nondet.
+%%	attiva il ragionamento non deterministico: ogni sentinella
+%	potrebbe sempre seguire una ronda non prevista.
 
 %  Visualizzazione della conoscenza in fase di debugging
 %  mappa_agente USA position e goal della mappa corrente

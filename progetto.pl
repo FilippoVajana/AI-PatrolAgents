@@ -54,7 +54,7 @@ gen [vado(punto, punto),
 
 gen [map(punto, terreno)]: assumibile.
 
-/***  A:  inizialiizzazioni  *****/
+/***  A:  inizializzazioni  *****/
 
 pred clear_knowledge.
 % comando qui introdotto per azzerare la conoscenza, che altrimenti
@@ -120,8 +120,8 @@ decidi(_ST,
        % termino tristemente
        termino(impossibile(vado(P,G)))).
 
-% 4) nell'esecuzione del piano sono stato avvistato: faccio un passo
-% indietro e ripianifico.
+% 4) nell'esecuzione del piano sono stato
+% avvistato, quindi termino.
 decidi(st(_DoveSono,G,_T),
        [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
        termino(impossibile(avanzo(P,Tprec)))).
@@ -132,8 +132,8 @@ decidi(st(_DoveSono,G,_T),
 azione(avanzo(_,_)).
 
 % esegui_azione è specificato in vai_if;
-% la posizione in cui devo andare è visibile; se libera
-% ci vado, altrimenti fallisco
+% faccio un passo verso la posizione indicata, dopo aver controllato se
+% vengo avvistato o meno.
 esegui_azione(st(P0,G,T0), _Storia, avanzo(P1,T0), st(P1,G,T1)) :-
 	Tnext is T0 + 1,
 	foreach(stato_sentinella(S,_,_),not(soldato_avvistato(S,P1,Tnext))),
@@ -176,8 +176,7 @@ cerca_un_piano(P, G, Piano) :-
 	estrai_piano(Sol,Piano).
 
 type [nc(punto,list(punto),number)]:nodo.
-%  non stiamo a importare tutti i tipi di search_spec.pl
-%  qui ci basta questo
+%  importo il tipo nc di search_spec.pl
 pred estrai_piano(nodo, list(decisione)).
 %  estrai_piano(+Sol, -Piano) det
 %  Piano è la sequenza di avanzamenti che percorre la
@@ -244,13 +243,10 @@ pred pensa_avvistato(id_sentinella,punto,tempo).
 pensa_avvistato(S,P,T) :-
 	pensa(punto_sorvegliato(S,P,T),_).
 
-%  implemento il costo, in base a quanto assume l'agente
-%  nello stato di conoscenza attuale
+%  il costo di un passo e' sempre 1
 costo(P1,P2, 1) :-
 	P1 \== P2.
-% implemento l'euristica usando la distanza in quadretti
-% implementata in livello.pl; il goal è quello memorizzato
-% prima di lanciare la ricerca con solve
+% implemento l'euristica usando la distanza euclidea
 h(P,H) :-
 	current_goal(G),
 	distanza_euclidea(P,G,H).
@@ -264,42 +260,33 @@ h(P,H) :-
 %   avviene a fronte di un evento verificatosi
 
 %  1) evento inizio_storia(_). All'inizio l'agente si trova in una
-%  posizione che, almeno nella prima escuzione, è nuova
+%  posizione che, almeno nella prima escuzione, è nuova e per prima cosa
+%  memorizza i punti sorvegliati
 aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :-
-	%  l'agente si guarda in giro e impara (ricorda) cosa
-	%  c'è nel mondo nelle posizioni adiacenti
+	%  l'agente si guarda in giro e impara (ricorda) le posizioni iniziali dei        %  punti sorvegliati dalle sentinelle
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),(
 						   not(conosce(punto_sorvegliato(S,Pa,0))) ->
 						   impara(punto_sorvegliato(S,Pa,0)))))),
 	!.
-/*
-	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
-					forall(member(Pa,L),
-					       (   impara(punto_sorvegliato(S,Pa,0)),
-					       retractall(assunto(punto_sorvegliato(S,Pa,0))))))).
-*/
+
 %   2) evento transizione(S1,A,S2,PL). E' stata eseguita la transizione
-%   da S1 a S2, l'agente si trova in una posizione che potrebbe non aver
-%   mai visto prima
+%   da S1 a S2, l'agente si trova in una posizione nuova in un certo
+%   tempo
 aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
-	%  l'agente si guarda in giro e impara (ricorda)
+	%  l'agente si guarda in giro e memorizza i punti sorvegliati
 	clock(T),
-	% not(conosce(punto_sorvegliato(_,T))),
-	% setof(A,(stato_sentinella(_,P,D),area_sentinella(P,D,A)),ListaAree),
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),(
 						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
 						   impara(punto_sorvegliato(S,Pa,T)))))),
 	!.
-/*
-	forall(member(Area,ListaAree),(
-		   forall(punto_area(Punto,Area),
-				       (   impara(punto_sorvegliato(s1,Punto,T)),
-					   retractall(assunto(punto_sorvegliato(s1,Punto,T))))))).
-*/
+
+%   3) evento fallita(vado(_,_),[_]). Mentre l'agente si spostava, e'
+%   stato avvistato. L'agente dunque memorizza la posizione in cui e'
+%   stato avvistato, in modo da ricordarsene durante la prossima
+%   esecuzione.
 aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,_)|_])) :-
-	% NOTA: bisogna sapere quale sentinella mi ha visto
 	clock(T),
 	Tnext is T + 1,
 	soldato_avvistato(S,Dest,Tnext),
@@ -307,7 +294,7 @@ aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,_)|_])) :-
 	impara(punto_sorvegliato(S,Dest,Tnext)),
 	!.
 
-%  3) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
+%  4) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
 %  non c'è nulla da imparare; l'agente non fa nulla
 aggiorna_conoscenza(st(_P,_G,_T), _H, _Evento).
 
@@ -321,28 +308,28 @@ estrai_punti_area(S,L) :-
 	setof(Punto,(punto_mappa(Punto,Mappa),punto_area(Punto,A)),L).
 
 % assumibile è specificata in vai_if.pl; sono i predicati che
-% l'agente potrebbe non conoscere e sui quali fa assunzioni
-% il nostro agente esploratore fa assunzioni solo sulla mappa
-% (per le posizioni che non ha ancora visto)
+% l'agente potrebbe non conoscere e sui quali fa
+% assunzioni.
+% L'agente fa assunzioni sui punti sorvegliati dalle sentinelle.
 assumibile(punto_sorvegliato(_,_,_)).
 
 % contraria è specificata in vai_if.pl
-% Due assunzioni sulla mappa sono contrarie se assumono due
-% diverse qualità di terreno su una stessa posizione
+% Qui contraria e' utilizzato per pulire la conoscenza da tutte le
+% assunzioni inutili.
+contraria(punto_sorvegliato(S,_,T),punto_sorvegliato(S,_,T)).
 
-%%	contraria(assunzione,conoscenza)
-contraria(punto_sorvegliato(S,_,T),punto_sorvegliato(S,P,T)).
 %  meta è specificata in vai_if.pl e indica i predicati sui quali
 %  avviene il ragionamento basato su assunzioni con il predicato pensa;
-% Il nostro agente pensa solo alla eseguibilità delle azioni, quando
-% decide raggiungibile e libera
+% Il nostro agente pensa alla possibilita' che un punto sia sorvegliato
+% da una sentinella ad un certo tempo.
 meta(punto_sorvegliato(_,_,_)).
 
 %  decide_se_assumere è specificata in vai_if.pl; quando l'agente
 %  deve fare una assunzione, può decidere di non farla e fallire se
 %  vi sono motivi in contrario
-%  Il nostro esploratore ènottimista, assume SEMPTE che le posizioni che
-%  non conosce siano libere
+%  L'agente assume sempre che ogni sentinella, nell'immediato futuro,
+%  estendera' la propria area di influenza nella direzione in cui sta
+%  guardando.
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,e), !,
@@ -375,8 +362,6 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	I2nuovo is I2 + 1,
 	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
-
-
 
 %  Visualizzazione della conoscenza in fase di debugging
 %  mappa_agente USA position e goal della mappa corrente
