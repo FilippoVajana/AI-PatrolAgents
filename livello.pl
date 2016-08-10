@@ -134,6 +134,7 @@ ambiente(2, [
 'o      p o',
 'oooooooooo']).
 
+%%	per testare non determinismo
 ambiente(3,[
 'ooooooooooo',
 'o         o',
@@ -147,11 +148,23 @@ ambiente(3,[
 'o         o',
 'ooooooooooo']).
 
+%%	per testare non determinismo
 ambiente(4, [
 'oooooooooo',
 'o  x     o',
 'o        o',
 'o        o',
+'o        o',
+'o        o',
+'op       o',
+'oooooooooo']).
+
+%%	per testare la decisione di attesa
+ambiente(5, [
+'oooooooooo',
+'ox   o   o',
+'o    o   o',
+'o    o   o',
 'o        o',
 'o        o',
 'op       o',

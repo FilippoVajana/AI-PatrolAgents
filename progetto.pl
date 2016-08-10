@@ -108,30 +108,32 @@ decidi(st(P0,G,_T),
 
 % 2) ho eseguito la decisione precedente _Dec;
 decidi(st(DoveSono,G,_T),
-       [eseguita(vado(P,G))|_],
+       [eseguita(Dec)|_],
        Decisione)
 :- DoveSono = G ->
    % se la mia posizione è il goal, termino
-   Decisione = termino(eseguita(vado(P,G)))
+   Decisione = termino(eseguita(Dec))
    ;
    %  altrimenti cerco un piano per andare da DoveSono a G
    Decisione = vado(DoveSono,G).
 
 % 3) nella ricerca del piano ho verificato l'impossibilita'
-% di raggiungere il goal
+% di raggiungere il goal e mi ero gia' fermato ad aspettare
 decidi(_ST,
        [impossibile(vado(P,G)),eseguita(attesa)|_],
        % termino tristemente
        termino(impossibile(vado(P,G)))):- !.
+% 4) nella ricerca del piano ho verificato l'impossibilita' di
+% raggiungere il goal, ma forse se mi fermo le sentinelle si spostano
 decidi(_ST,
        [impossibile(vado(_,_))|_],
        attesa).
 
-% 4) nell'esecuzione del piano sono stato
+% 5) nell'esecuzione del piano sono stato
 % avvistato, quindi termino.
-decidi(st(_DoveSono,G,_T),
-       [fallita(vado(_P0,G),[avanzo(P,Tprec)|_Storia])|_],
-       termino(impossibile(avanzo(P,Tprec)))).
+decidi(st(_DoveSono,_G,_T),
+       [fallita(_,[Passo|_])|_],
+       termino(impossibile(Passo))).
 
 /****** C:   LE AZIONI  *******/
 
