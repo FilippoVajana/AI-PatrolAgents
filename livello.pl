@@ -91,7 +91,6 @@ carica_mappa(N) :-
 	retractall(position(_)),
 	retractall(goal(_)),
 	retractall(map_size(_)),
-	%carica_ronde(N),
 	ambiente(N, A),
 	maplist(atom_chars, A, AA),
 	length(A,NR),
@@ -110,48 +109,7 @@ store_map(P,p) :- !,
 store_map(P, Ch) :-
 	assert(map(P,Ch)).
 
-carica_ronde(N) :-
-	get_file(N,Filename),
-	retractall(ronda(_,_,_,_)),
-	consult(Filename).
-
-get_file(1,'ronde_1').
-get_file(2,'ronde_2').
-get_file(3,'ronde_3').
-
 ignored(ambiente(_,_)).
-
-/*
-ambiente(1, [
-'oooooooooo',
-'o   x    o',
-'o   ooo  o',
-'o  oo    o',
-'o  oo oo o',
-'o    ooooo',
-'o      g o',
-'oooooooooo']).
-
-ambiente(2, [
-'oooooooooo',
-'o   x    o',
-'o   ooo  o',
-'o  oo    o',
-'o  oo oo o',
-'ooo oooooo',
-'o      g o',
-'oooooooooo']).
-
-ambiente(3, [
-'oooooooooo',
-'o   x    o',
-'o   ooo  o',
-'o  oo    o',
-'o  oo oo o',
-'oooooooooo',
-'o      g o',
-'oooooooooo']).
-*/
 
 ambiente(1, [
 'oooooooooo',
@@ -176,17 +134,28 @@ ambiente(2, [
 'o      p o',
 'oooooooooo']).
 
-ambiente(3, [
+ambiente(3,[
+'ooooooooooo',
+'o         o',
+'o      oooo',
+'o x    oooo',
+'o        po',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'ooooooooooo']).
+
+ambiente(4, [
 'oooooooooo',
-'o x      o',
-'o        o',
+'o  x     o',
 'o        o',
 'o        o',
 'o        o',
 'o        o',
 'op       o',
 'oooooooooo']).
-
 
 
 

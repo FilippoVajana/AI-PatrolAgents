@@ -55,16 +55,25 @@ pred ronda_corrente(string).
 pred carica_ronda(integer).
 %%	carica_ronda(++I) DET
 %%	Spec: carica il set di ronde specificato da I
-carica_ronda(1) :-
+carica_ronda(I) :-
 	(
         ronda_corrente(VecchiaRonda),
 	unload_file(VecchiaRonda)
 	;
 	assert(ronda_corrente('nessuna'))
 	),
-	consult('ronde_1'),
+	nomi_ronde(I,File),
+	consult(File),
 	retractall(ronda_corrente(_)),
-	assert(ronda_corrente('ronde_1')),
+	assert(ronda_corrente(File)).
+
+pred nomi_ronde(integer,string).
+%%	nomi_ronde(?I,?File) DET
+%%	Spec: mappa i numeri dei set di ronde sui rispettivi filename.
+nomi_ronde(1,'ronde_1').
+nomi_ronde(2,'ronde_2').
+nomi_ronde(3,'ronde_3').
+nomi_ronde(4,'ronde_4').
 
 %%  PREDICATI RELATIVI A SENTINELLA  %%
 
