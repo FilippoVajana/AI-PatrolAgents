@@ -32,7 +32,8 @@ soldato_avvistato(S,p(X_G,Y_G),T) :-
 	ronda_sentinella(S,R),
 	ronda(R, p(X_S,Y_S), Direzione, T),
 	area_sentinella(p(X_S,Y_S), Direzione, A),
-	punto_area(p(X_G, Y_G), A).
+	punto_area(p(X_G, Y_G), A),
+	writeln('[':S:']: avvistato!').
 
 pred ronda_sentinella(id_sentinella,id_ronda).
 %%	ronda_sentinella(?Sentinella,?Ronda) SEMIDET

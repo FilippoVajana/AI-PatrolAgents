@@ -290,8 +290,7 @@ aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),(
 						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
-						   (   impara(punto_sorvegliato(S,Pa,T)),
-						   retractall(assunto(punto_sorvegliato(S,_,T)))))))),
+						   impara(punto_sorvegliato(S,Pa,T)))))),
 	!.
 /*
 	forall(member(Area,ListaAree),(
@@ -306,14 +305,8 @@ aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,_)|_])) :-
 	soldato_avvistato(S,Dest,Tnext),
 	not(conosce(punto_sorvegliato(S,Dest,Tnext))) ->
 	impara(punto_sorvegliato(S,Dest,Tnext)),
-	retractall(assunto(punto_sorvegliato(S,_,Tnext))),
 	!.
-/*
-	T is Tprec + 1,
-	not(conosce(punto_sorvegliato(s1,Dest,T))),
-	impara(punto_sorvegliato(s1,Dest,T)),
-	retractall(assunto(punto_sorvegliato(s1,_,T))).
-*/
+
 %  3) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
 %  non c'è nulla da imparare; l'agente non fa nulla
 aggiorna_conoscenza(st(_P,_G,_T), _H, _Evento).
@@ -324,7 +317,8 @@ pred estrai_punti_area(id_sentinella,list(punto)).
 estrai_punti_area(S,L) :-
 	stato_sentinella(S,P,D),
 	area_sentinella(P,D,A),
-	setof(Punto,punto_area(Punto,A),L).
+	map_size(Mappa),
+	setof(Punto,(punto_mappa(Punto,Mappa),punto_area(Punto,A)),L).
 
 % assumibile è specificata in vai_if.pl; sono i predicati che
 % l'agente potrebbe non conoscere e sui quali fa assunzioni
@@ -336,7 +330,8 @@ assumibile(punto_sorvegliato(_,_,_)).
 % Due assunzioni sulla mappa sono contrarie se assumono due
 % diverse qualità di terreno su una stessa posizione
 
-contraria(_,_):- false.
+%%	contraria(assunzione,conoscenza)
+contraria(punto_sorvegliato(S,_,T),punto_sorvegliato(S,P,T)).
 %  meta è specificata in vai_if.pl e indica i predicati sui quali
 %  avviene il ragionamento basato su assunzioni con il predicato pensa;
 % Il nostro agente pensa solo alla eseguibilità delle azioni, quando
