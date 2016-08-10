@@ -78,6 +78,7 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	azzera_clock,
 	clock(T),
 	carica_mappa(I),
+	carica_ronda(I),
 	position(P0),
 	goal(G),
 	(   ultima(I) ->
@@ -289,7 +290,8 @@ aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),(
 						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
-						   impara(punto_sorvegliato(S,Pa,T)))))),
+						   (   impara(punto_sorvegliato(S,Pa,T)),
+						   retractall(assunto(punto_sorvegliato(S,_,T)))))))),
 	!.
 /*
 	forall(member(Area,ListaAree),(
@@ -352,7 +354,7 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	J1nuovo is J1 + 1,
 	J2nuovo is J2 + 1,
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
-	assert(assunto(punto_sorvegliato(P,T))).
+	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,o), !,
@@ -360,7 +362,7 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	J1nuovo is J1 - 1,
 	J2nuovo is J2 - 1,
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
-	assert(assunto(punto_sorvegliato(P,T))).
+	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,n), !,

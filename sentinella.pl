@@ -73,6 +73,7 @@ pred nomi_ronde(integer,string).
 nomi_ronde(1,'ronde_1').
 nomi_ronde(2,'ronde_2').
 nomi_ronde(3,'ronde_3').
+nomi_ronde(4,'ronde_4').
 
 %%  PREDICATI RELATIVI A SENTINELLA  %%
 

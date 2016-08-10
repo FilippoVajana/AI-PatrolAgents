@@ -290,7 +290,8 @@ aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
 					forall(member(Pa,L),(
 						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
-						   impara(punto_sorvegliato(S,Pa,T)))))),
+						   (   impara(punto_sorvegliato(S,Pa,T)),
+						   retractall(assunto(punto_sorvegliato(S,_,T)))))))),
 	!.
 /*
 	forall(member(Area,ListaAree),(
@@ -305,6 +306,7 @@ aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,_)|_])) :-
 	soldato_avvistato(S,Dest,Tnext),
 	not(conosce(punto_sorvegliato(S,Dest,Tnext))) ->
 	impara(punto_sorvegliato(S,Dest,Tnext)),
+	retractall(assunto(punto_sorvegliato(S,_,Tnext))),
 	!.
 /*
 	T is Tprec + 1,
@@ -353,7 +355,7 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	J1nuovo is J1 + 1,
 	J2nuovo is J2 + 1,
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
-	assert(assunto(punto_sorvegliato(P,T))).
+	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,o), !,
@@ -361,7 +363,7 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	J1nuovo is J1 - 1,
 	J2nuovo is J2 - 1,
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
-	assert(assunto(punto_sorvegliato(P,T))).
+	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,n), !,
