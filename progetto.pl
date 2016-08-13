@@ -5,8 +5,10 @@
 
 
 :- use_module(library(mr)).
+:- use_module(library(pce)).
 :- use_module(sentinella).
 :- use_module(tempo).
+:- use_module(gui).
 :- consult(livello).
 :- consult(vai).
 
@@ -85,6 +87,13 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	carica_ronda(I),
 	position(P0),
 	goal(G),
+	map_size(size(Width,Length)),
+	dimensioni_finestra(Width,Length,X,Y),
+	W is X + 24,
+	L is Y + 24,
+	new(@p, picture('Agente Stealth', size(W,L))),
+	map_refresh(@p),
+	send(@p,open),
 	(   ultima(I) ->
 	    writeln('CONTINUAZIONE SU ':mappa(I))
 	;   retractall(ultima(_)),
@@ -112,7 +121,8 @@ decidi(st(DoveSono,G,_T),
        Decisione)
 :- DoveSono = G ->
    % se la mia posizione è il goal, termino
-   Decisione = termino(eseguita(Dec))
+   Decisione = termino(eseguita(Dec)),
+   free(@p)
    ;
    %  altrimenti cerco un piano per andare da DoveSono a G
    Decisione = vado(DoveSono,G).
@@ -122,7 +132,7 @@ decidi(st(DoveSono,G,_T),
 decidi(_ST,
        [impossibile(vado(P,G)),eseguita(attesa)|_],
        % termino tristemente
-       termino(impossibile(vado(P,G)))):- !.
+       termino(impossibile(vado(P,G)))):- !, free(@p).
 % 4) nella ricerca del piano ho verificato l'impossibilita' di
 % raggiungere il goal, ma forse se mi fermo le sentinelle si spostano
 decidi(_ST,
@@ -133,7 +143,7 @@ decidi(_ST,
 % avvistato, quindi termino.
 decidi(st(_DoveSono,_G,_T),
        [fallita(_,[Passo|_])|_],
-       termino(impossibile(Passo))).
+       termino(impossibile(Passo))):- free(@p).
 
 /****** C:   LE AZIONI  *******/
 
@@ -402,6 +412,8 @@ mostra_conoscenza :-
 	%  riscrivo mostra_conoscenza di default, forendo
 	%  una rappresentazione grafica della conoscenza;
 	%  uso mostra_mappa definita in livello.pl
+	map_refresh(@p),
+	send(@p,open),
 	mostra_mappa(mappa_agente).
 
 

@@ -2,7 +2,9 @@
 	  [stato_sentinella/3,
 	   soldato_avvistato/3,
 	   area_sentinella/3,
-	   carica_ronda/1]).
+	   carica_ronda/1,
+	   ronda_sentinella/2,
+	   ronda_corrente/1]).
 :- discontiguous(ignored(_)).
 :- discontiguous sentinella: (pred)/1.
 :- use_module(library(is_a)).

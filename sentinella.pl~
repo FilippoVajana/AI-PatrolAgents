@@ -2,7 +2,8 @@
 	  [stato_sentinella/3,
 	   soldato_avvistato/3,
 	   area_sentinella/3,
-	   carica_ronda/1]).
+	   carica_ronda/1,
+	   ronda_sentinella/2]).
 :- discontiguous(ignored(_)).
 :- discontiguous sentinella: (pred)/1.
 :- use_module(library(is_a)).
@@ -75,6 +76,7 @@ nomi_ronde(1,'ronde_1').
 nomi_ronde(2,'ronde_2').
 nomi_ronde(3,'ronde_3').
 nomi_ronde(4,'ronde_4').
+nomi_ronde(5,'ronde_5').
 
 %%  PREDICATI RELATIVI A SENTINELLA  %%
 
