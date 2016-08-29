@@ -95,6 +95,7 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	new(@p, dialog('Agente Stealth', size(W,L))),
 	map_refresh(@p),
 	send(@p,open),
+	send(@p, modal, transient),
 	(   ultima(I) ->
 	    writeln('CONTINUAZIONE SU ':mappa(I))
 	;   retractall(ultima(_)),
@@ -416,7 +417,6 @@ mostra_conoscenza :-
 	%  una rappresentazione grafica della conoscenza;
 	%  uso mostra_mappa definita in livello.pl
 	map_refresh(@p),
-	send(@p,open),
 	mostra_mappa(mappa_agente).
 
 

@@ -3,7 +3,8 @@
 	   soldato_avvistato/3,
 	   area_sentinella/3,
 	   carica_ronda/1,
-	   ronda_sentinella/2]).
+	   ronda_sentinella/2,
+	   ronda_corrente/1]).
 :- discontiguous(ignored(_)).
 :- discontiguous sentinella: (pred)/1.
 :- use_module(library(is_a)).
@@ -34,7 +35,7 @@ soldato_avvistato(S,p(X_G,Y_G),T) :-
 	ronda(R, p(X_S,Y_S), Direzione, T),
 	area_sentinella(p(X_S,Y_S), Direzione, A),
 	punto_area(p(X_G, Y_G), A),
-	writeln('[':S:']: avvistato!').
+	writeln('[',S,']: avvistato!'),!.
 
 pred ronda_sentinella(id_sentinella,id_ronda).
 %%	ronda_sentinella(?Sentinella,?Ronda) SEMIDET
