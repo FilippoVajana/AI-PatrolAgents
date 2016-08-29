@@ -29,6 +29,8 @@ get_sprite(P, 'sprites/sent-left.bmp') :-
 	stato_sentinella(_,P,o), !.
 get_sprite(P, 'sprites/sent-right.bmp') :-
 	stato_sentinella(_,P,e), !.
+get_sprite(P, 'sprites/wall.bmp') :-
+	map(P,o), !.
 get_sprite(P, 'sprites/patrolled.bmp') :-
 	bagof(Sent, (
 		  stato_sentinella(Sent,Ps,D),
@@ -37,8 +39,6 @@ get_sprite(P, 'sprites/patrolled.bmp') :-
 	      ), _),
 	% fallisce se il risultato di bagof e' una lista vuota, quindi se non e' fallito metto il cut
 	!.
-get_sprite(P, 'sprites/wall.bmp') :-
-	map(P,o), !.
 get_sprite(P, 'sprites/grass.bmp') :-
 	map(P, ' ').
 
@@ -50,7 +50,9 @@ map_refresh(Finestra) :-
 	setof(sprite(P,SpriteType), (punto_mappa(P,Size), get_sprite(P,SpriteType)), ListaSprite),
 	forall(member(sprite(p(X1,Y1),Sprite),ListaSprite),
 	       (   dimensioni_finestra(X1,Y1,X2,Y2),
-		   send(Finestra, display, new(_, bitmap(Sprite)), point(X2,Y2)))).
+		   send(Finestra, display, new(_, bitmap(Sprite)), point(X2,Y2)))),
+	send(Finestra, append, new(BTS, dialog_group(buttons, group))),
+	send(BTS, append, button(add, message(@prolog, thread_send_message, next_move_queue, next_move)), below).
 
 
 

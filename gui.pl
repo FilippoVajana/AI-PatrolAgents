@@ -50,7 +50,9 @@ map_refresh(Finestra) :-
 	setof(sprite(P,SpriteType), (punto_mappa(P,Size), get_sprite(P,SpriteType)), ListaSprite),
 	forall(member(sprite(p(X1,Y1),Sprite),ListaSprite),
 	       (   dimensioni_finestra(X1,Y1,X2,Y2),
-		   send(Finestra, display, new(_, bitmap(Sprite)), point(X2,Y2)))).
+		   send(Finestra, display, new(_, bitmap(Sprite)), point(X2,Y2)))),
+	send(Finestra, append, new(BTS, dialog_group(buttons, group))),
+	send(BTS, append, button(next, message(@prolog, thread_send_message, next_move_queue, next_move)), below).
 
 
 

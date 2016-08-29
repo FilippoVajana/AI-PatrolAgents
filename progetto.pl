@@ -91,7 +91,8 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	dimensioni_finestra(Width,Length,X,Y),
 	W is X + 24,
 	L is Y + 24,
-	new(@p, picture('Agente Stealth', size(W,L))),
+	message_queue_create(next_move_queue),
+	new(@p, dialog('Agente Stealth', size(W,L))),
 	map_refresh(@p),
 	send(@p,open),
 	(   ultima(I) ->
@@ -143,7 +144,9 @@ decidi(_ST,
 % avvistato, quindi termino.
 decidi(st(_DoveSono,_G,_T),
        [fallita(_,[Passo|_])|_],
-       termino(impossibile(Passo))):- free(@p).
+       termino(impossibile(Passo))):-
+       message_queue_destroy(next_move_queue),
+       free(@p).
 
 /****** C:   LE AZIONI  *******/
 
