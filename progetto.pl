@@ -371,37 +371,46 @@ meta(punto_sorvegliato(_,_,_)).
 %  estendera' la propria area di influenza nella direzione in cui sta
 %  guardando.
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	clock(Ora),
+	Diff is T - Ora,
+	(Diff > 3 -> M is 3; M is Diff),
 	libera(P),
 	stato_sentinella(S,Psent,e), !,
 	area_sentinella(Psent,e,area(p(I1,J1),p(I2,J2))),
-	J1nuovo is J1 + 1,
-	J2nuovo is J2 + 1,
-	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
+	J1nuovo is J1 + M,
+	punto_area(P,area(p(I1,J1nuovo),p(I2,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
+	clock(Ora),
+	Diff is T - Ora,
+	(Diff > 3 -> M is 3; M is Diff),
 	stato_sentinella(S,Psent,o), !,
 	area_sentinella(Psent,o,area(p(I1,J1),p(I2,J2))),
-	J1nuovo is J1 - 1,
-	J2nuovo is J2 - 1,
-	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
+	J2nuovo is J2 - M,
+	punto_area(P,area(p(I1,J1),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
+	clock(Ora),
+	Diff is T - Ora,
+	(Diff > 3 -> M is 3; M is Diff),
 	stato_sentinella(S,Psent,n), !,
 	area_sentinella(Psent,n,area(p(I1,J1),p(I2,J2))),
-	I1nuovo is I1 - 1,
-	I2nuovo is I2 - 1,
-	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
+	I1nuovo is I1 - M,
+	punto_area(P,area(p(I1nuovo,J1),p(I2,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
+	clock(Ora),
+	Diff is T - Ora,
+	(Diff > 3 -> M is 3; M is Diff),
 	stato_sentinella(S,Psent,s), !,
 	area_sentinella(Psent,s,area(p(I1,J1),p(I2,J2))),
-	I1nuovo is I1 + 1,
-	I2nuovo is I2 + 1,
-	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
+	I2nuovo is I2 + M,
+	punto_area(P,area(p(I1,J1),p(I2nuovo,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
+
 
 %  Visualizzazione della conoscenza in fase di debugging
 %  mappa_agente USA position e goal della mappa corrente
