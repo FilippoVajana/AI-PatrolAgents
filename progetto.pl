@@ -88,14 +88,18 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	position(P0),
 	goal(G),
 	map_size(size(Width,Length)),
+	% costruisco la finestra per la GUI
 	dimensioni_finestra(Width,Length,X,Y),
 	W is X + 24,
 	L is Y + 24,
+	% creo una coda in cui salvare i messaggi di attesa (relativi al tasto 'Next' della GUI)
 	message_queue_create(next_move_queue),
+	% creo la finestra e la popolo
 	new(@p, dialog('Agente Stealth', size(W,L))),
 	map_refresh(@p),
+	% apro la finestra
 	send(@p,open),
-	send(@p, modal, transient),
+	%send(@p, modal, transient),
 	(   ultima(I) ->
 	    writeln('CONTINUAZIONE SU ':mappa(I))
 	;   retractall(ultima(_)),
@@ -124,6 +128,7 @@ decidi(st(DoveSono,G,_T),
 :- DoveSono = G ->
    % se la mia posizione è il goal, termino
    Decisione = termino(eseguita(Dec)),
+   message_queue_destroy(next_move_queue),
    free(@p)
    ;
    %  altrimenti cerco un piano per andare da DoveSono a G
@@ -134,7 +139,9 @@ decidi(st(DoveSono,G,_T),
 decidi(_ST,
        [impossibile(vado(P,G)),eseguita(attesa)|_],
        % termino tristemente
-       termino(impossibile(vado(P,G)))):- !, free(@p).
+       termino(impossibile(vado(P,G)))):- !,
+       message_queue_destroy(next_move_queue),
+       free(@p).
 % 4) nella ricerca del piano ho verificato l'impossibilita' di
 % raggiungere il goal, ma forse se mi fermo le sentinelle si spostano
 decidi(_ST,
@@ -285,18 +292,25 @@ h(P,H) :-
 
 /******************  E)  PARTE DI RAGIONAMENTO  *******************/
 
+%%	predicato usato nell'aggiornamento della conoscenza
+pred impara_punti_sorvegliati(tempo).
+%%	impara_punti_sorvegliati(+T) DET
+%%	Spec: impara quali punti sono sorvegliati al tempo T
+impara_punti_sorvegliati(T) :-
+	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
+					forall(member(Pa,L),(
+						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
+						   impara(punto_sorvegliato(S,Pa,T)))))).
+
 %   aggiorna_conoscenza è specificata in vai_if.pl
 %   avviene a fronte di un evento verificatosi
-
+%
 %  1) evento inizio_storia(_). All'inizio l'agente si trova in una
 %  posizione che, almeno nella prima escuzione, è nuova e per prima cosa
 %  memorizza i punti sorvegliati
 aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :-
 	%  l'agente si guarda in giro e impara (ricorda) le posizioni iniziali dei        %  punti sorvegliati dalle sentinelle
-	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
-					forall(member(Pa,L),(
-						   not(conosce(punto_sorvegliato(S,Pa,0))) ->
-						   impara(punto_sorvegliato(S,Pa,0)))))),
+	impara_punti_sorvegliati(0),
 	!.
 
 %   2) evento transizione(S1,A,S2,PL). E' stata eseguita la transizione
@@ -305,10 +319,7 @@ aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :-
 aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	%  l'agente si guarda in giro e memorizza i punti sorvegliati
 	clock(T),
-	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
-					forall(member(Pa,L),(
-						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
-						   impara(punto_sorvegliato(S,Pa,T)))))),
+	impara_punti_sorvegliati(T),
 	!.
 
 %   3) evento fallita(vado(_,_),[_]). Mentre l'agente si spostava, e'
@@ -345,7 +356,7 @@ assumibile(punto_sorvegliato(_,_,_)).
 % contraria è specificata in vai_if.pl
 % Qui contraria e' utilizzato per pulire la conoscenza da tutte le
 % assunzioni inutili.
-contraria(punto_sorvegliato(S,_,T),punto_sorvegliato(S,_,T)).
+contraria(punto_sorvegliato(S,D,T),punto_sorvegliato(S,D,T)).
 
 %  meta è specificata in vai_if.pl e indica i predicati sui quali
 %  avviene il ragionamento basato su assunzioni con il predicato pensa;
