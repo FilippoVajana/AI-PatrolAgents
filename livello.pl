@@ -170,9 +170,16 @@ ambiente(5, [
 'op       o',
 'oooooooooo']).
 
-
-
-
-
-
-
+%% per testare ronde piu' complesse
+ambiente(6, [
+'ooooooooooo',
+'o    x    o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o        po',
+'ooooooooooo']).

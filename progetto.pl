@@ -72,8 +72,8 @@ clear_knowledge :-
 	retractall(assunto(_)),
 	retractall(conosce(_)).
 
-% specificato in vai_if; l'informazione iniziale è qui
-% la mappa che vogliamo usare; se già caricata non viene
+% specificato in vai_if; l'informazione iniziale ï¿½ qui
+% la mappa che vogliamo usare; se giï¿½ caricata non viene
 % azzerata conoscenza dinamica dell'agente, che di volta in volta
 % impara; se si passa a nuova mappa, l'agente parte con
 % conoscenza dinamica nulla;  usiamo  ultima/1 per ricordare
@@ -113,10 +113,10 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 
 /****  B: le decisioni *******/
 
-% fine è specificato in vai_if; la decisione finale è termino(...)
+% fine ï¿½ specificato in vai_if; la decisione finale ï¿½ termino(...)
 fine(termino(_)).
 
-% decidi è specificato in vai_if;  lo implemento come segue
+% decidi ï¿½ specificato in vai_if;  lo implemento come segue
 % 1) sono a inizio storia con goal G;
 decidi(st(P0,G,_T),
        [inizio_storia(_I)],
@@ -128,7 +128,7 @@ decidi(st(DoveSono,G,_T),
        [eseguita(Dec)|_],
        Decisione)
 :- DoveSono = G ->
-   % se la mia posizione è il goal, termino
+   % se la mia posizione ï¿½ il goal, termino
    Decisione = termino(eseguita(Dec)),
    message_queue_destroy(next_move_queue),
    free(@p)
@@ -160,11 +160,11 @@ decidi(st(_DoveSono,_G,_T),
 
 /****** C:   LE AZIONI  *******/
 
-% azione è specificato in vai_if;  le azioni sono le seguenti:
+% azione ï¿½ specificato in vai_if;  le azioni sono le seguenti:
 azione(avanzo(_,_)).
 azione(aspetto).
 
-% esegui_azione è specificato in vai_if;
+% esegui_azione ï¿½ specificato in vai_if;
 % faccio un passo verso la posizione indicata, dopo aver controllato se
 % vengo avvistato o meno.
 esegui_azione(st(P0,G,T0), _Storia, avanzo(P1,T0), st(P1,G,T1)) :-
@@ -181,7 +181,7 @@ esegui_azione(st(P,G,T0), _Storia, aspetto, st(P,G,T1)) :-
 	clock(T1).
 
 pred libera(punto).
-   %  libera(?P) semidet:    P è una posizione della mappa
+   %  libera(?P) semidet:    P ï¿½ una posizione della mappa
    %  libera da ostacoli
 libera(P) :-
 	map(P,T),
@@ -198,10 +198,10 @@ piano(_ST, _Storia, attesa, [aspetto,aspetto,aspetto]).
 
 pred cerca_un_piano(punto,punto, list(decisione)).
 %  cerca_un_piano(+P, +G, -Piano) semidet
-%  Piano è un piano che porta daP a G, possibile in base alle
+%  Piano ï¿½ un piano che porta daP a G, possibile in base alle
 %  conoscenze che l'agente ha in questo momento
 %  FALLISCE se non ci sono piani, nel qual caso l'agente sa che il goal
-%  non è raggiungibile indipendentemente da ciò che ancora non conosce
+%  non ï¿½ raggiungibile indipendentemente da ciï¿½ che ancora non conosce
 :- dynamic(current_goal/1).
 pred current_goal(punto).
 cerca_un_piano(P, G, Piano) :-
@@ -217,10 +217,10 @@ type [nc(punto,list(punto),number)]:nodo.
 %  importo il tipo nc di search_spec.pl
 pred estrai_piano(nodo, list(decisione)).
 %  estrai_piano(+Sol, -Piano) det
-%  Piano è la sequenza di avanzamenti che percorre la
+%  Piano ï¿½ la sequenza di avanzamenti che percorre la
 %  sequenza di posizioni calcolata nella soluzione Sol
 estrai_piano(nc(G,RevPath,_C), Piano) :-
-	% faccio la reverse perchè il path è dal
+	% faccio la reverse perchï¿½ il path ï¿½ dal
 	% nodo alla radice e quindi in senso inverso
 	reverse([G|RevPath], [_Start|Path]),
 	clock(T),
@@ -236,10 +236,10 @@ path2moves([],[],_).
 /*****  D1.  APPLICAZIONE DI A* e del ragionamento basato su
              assunzioni nella ricerca di un piano
 
-	     A* è implementato nel modulo mr.pl e richiede
+	     A* ï¿½ implementato nel modulo mr.pl e richiede
 	     di implementare l'interfaccia search_if.pl
 
-	     Il predicato pensa è implementato in vai.pl
+	     Il predicato pensa ï¿½ implementato in vai.pl
 
 *************************************************************/
 
@@ -265,7 +265,7 @@ manhattan(p(I1,J1),p(I2,J2),M) :-
 
 pred pensa_sicuro(punto,punto,tempo).
 %  pensa_sicuro(+P1, -P2) nondet
-%  P2 è raggiunibile da P1 ed e' un punto sicuro in base a quanto assume
+%  P2 ï¿½ raggiunibile da P1 ed e' un punto sicuro in base a quanto assume
 %  l'agente nello stato di conoscenza attuale
 pensa_sicuro(P1,P2,T) :-
 	adiacenti(P1,ListaAdiacenti),
@@ -279,7 +279,9 @@ pred pensa_avvistato(id_sentinella,punto,tempo).
 %%	Spec: vero sse l'agente pensa di essere avvistato da S nel punto
 %	P al tempo T
 pensa_avvistato(S,P,T) :-
-	pensa(punto_sorvegliato(S,P,T),_).
+	setof(Sent,(member(Sent,[s1,s2,s3,s4]),pensa(punto_sorvegliato(Sent,P,T),_)),ListaSorvegliati),
+  length(ListaSorvegliati,L),
+  L >= 1.
 
 %  il costo di un passo e' sempre 1
 costo(P1,P2, 1) :-
@@ -304,11 +306,11 @@ impara_punti_sorvegliati(T) :-
 						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
 						   impara(punto_sorvegliato(S,Pa,T)))))).
 
-%   aggiorna_conoscenza è specificata in vai_if.pl
+%   aggiorna_conoscenza ï¿½ specificata in vai_if.pl
 %   avviene a fronte di un evento verificatosi
 %
 %  1) evento inizio_storia(_). All'inizio l'agente si trova in una
-%  posizione che, almeno nella prima escuzione, è nuova e per prima cosa
+%  posizione che, almeno nella prima escuzione, ï¿½ nuova e per prima cosa
 %  memorizza i punti sorvegliati
 aggiorna_conoscenza(st(_P,_G,_), _H, inizio_storia(_Avvio)) :-
 	%  l'agente si guarda in giro e impara (ricorda) le posizioni iniziali dei        %  punti sorvegliati dalle sentinelle
@@ -337,7 +339,7 @@ aggiorna_conoscenza(st(_,G,_), _H, fallita(vado(_,G),[avanzo(Dest,_)|_])) :-
 	!.
 
 %  4) Per il cut, se arrivo qui non si ha nessuno dei casi precedenti,
-%  non c'è nulla da imparare; l'agente non fa nulla
+%  non c'ï¿½ nulla da imparare; l'agente non fa nulla
 aggiorna_conoscenza(st(_P,_G,_T), _H, _Evento).
 
 pred estrai_punti_area(id_sentinella,list(punto)).
@@ -349,18 +351,18 @@ estrai_punti_area(S,L) :-
 	map_size(Mappa),
 	setof(Punto,(punto_mappa(Punto,Mappa),punto_area(Punto,A)),L).
 
-% assumibile è specificata in vai_if.pl; sono i predicati che
+% assumibile ï¿½ specificata in vai_if.pl; sono i predicati che
 % l'agente potrebbe non conoscere e sui quali fa
 % assunzioni.
 % L'agente fa assunzioni sui punti sorvegliati dalle sentinelle.
 assumibile(punto_sorvegliato(_,_,_)).
 
-% contraria è specificata in vai_if.pl
+% contraria ï¿½ specificata in vai_if.pl
 % Qui contraria e' utilizzato per pulire la conoscenza da tutte le
 % assunzioni inutili.
-contraria(punto_sorvegliato(S,D,T),punto_sorvegliato(S,D,T)).
+contraria(_,_) :- false.
 
-%  meta è specificata in vai_if.pl e indica i predicati sui quali
+%  meta ï¿½ specificata in vai_if.pl e indica i predicati sui quali
 %  avviene il ragionamento basato su assunzioni con il predicato pensa;
 % Il nostro agente pensa alla possibilita' che un punto sia sorvegliato
 % da una sentinella ad un certo tempo.
@@ -381,8 +383,8 @@ set_strategia_assunzioni(S) :-
 	retractall(strategia_assunzioni(_)),
 	assert(strategia_assunzioni(S)).
 
-%  decide_se_assumere è specificata in vai_if.pl; quando l'agente
-%  deve fare una assunzione, può decidere di non farla e fallire se
+%  decide_se_assumere ï¿½ specificata in vai_if.pl; quando l'agente
+%  deve fare una assunzione, puï¿½ decidere di non farla e fallire se
 %  vi sono motivi in contrario
 %  L'agente assume sempre che ogni sentinella, nell'immediato futuro,
 %  estendera' la propria area di influenza nella direzione in cui sta
@@ -474,7 +476,7 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 %  Visualizzazione della conoscenza in fase di debugging
 %  mappa_agente USA position e goal della mappa corrente
 %  ( specifica in livello.pl);
-%  invece di usare map, usa ciò che conosce o ha assunto su map
+%  invece di usare map, usa ciï¿½ che conosce o ha assunto su map
 
 
 mappa_agente(P,Ch) :-
@@ -497,17 +499,3 @@ mostra_conoscenza :-
 	%  uso mostra_mappa definita in livello.pl
 	map_refresh(@p),
 	mostra_mappa(mappa_agente).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
