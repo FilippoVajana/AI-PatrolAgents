@@ -358,8 +358,8 @@ estrai_punti_area(S,L) :-
 assumibile(punto_sorvegliato(_,_,_)).
 
 % contraria � specificata in vai_if.pl
-% Qui contraria e' utilizzato per pulire la conoscenza da tutte le
-% assunzioni inutili.
+% Nessuna coppia di assunzioni e' inconsistente: l'agente assume piu' posizioni
+% nello stesso tempo per considerare anche il non determinismo.
 contraria(_,_) :- false.
 
 %  meta � specificata in vai_if.pl e indica i predicati sui quali
@@ -477,7 +477,6 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 %  mappa_agente USA position e goal della mappa corrente
 %  ( specifica in livello.pl);
 %  invece di usare map, usa ci� che conosce o ha assunto su map
-
 
 mappa_agente(P,Ch) :-
 	position(P), !, Ch=x

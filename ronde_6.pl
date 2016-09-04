@@ -20,27 +20,27 @@ ronda(r1,P,D,K) :-
   H is K mod 15,
   ronda(r1,P,D,H).
 
-ronda(r2,p(7,9),o,0):- !.
-ronda(r2,p(7,9),o,1):- !.
-ronda(r2,p(7,9),o,2):- !.
-ronda(r2,p(7,9),o,3):- !,
+ronda(r2,p(7,8),o,0):- !.
+ronda(r2,p(7,8),o,1):- !.
+ronda(r2,p(7,8),o,2):- !.
+ronda(r2,p(7,8),o,3):- !,
   retractall(stato_corrente(r2,_)),
   random_between(0,1,0) ->
-    assert(stato_corrente(r1,q1))
+    assert(stato_corrente(r2,q1))
     ;
-    assert(stato_corrente(r1,q2)).
+    assert(stato_corrente(r2,q2)).
 
-ronda(r2,p(7,9),o,4) :-
+ronda(r2,p(7,8),o,4) :-
   stato_corrente(r2,q1), !.
-ronda(r2,p(7,9),o,5) :-
+ronda(r2,p(7,8),o,5) :-
   stato_corrente(r2,q1), !.
-ronda(r2,p(7,9),o,6) :-
+ronda(r2,p(7,8),o,6) :-
   stato_corrente(r2,q1), !.
-ronda(r2,p(7,9),n,4) :-
+ronda(r2,p(7,8),n,4) :-
   stato_corrente(r2,q2), !.
-ronda(r2,p(7,9),n,5) :-
+ronda(r2,p(7,8),n,5) :-
   stato_corrente(r2,q2), !.
-ronda(r2,p(7,9),n,6) :-
+ronda(r2,p(7,8),n,6) :-
   stato_corrente(r2,q2), !.
 
 ronda(r2,P,D,K) :-
