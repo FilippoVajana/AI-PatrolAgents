@@ -364,13 +364,68 @@ contraria(punto_sorvegliato(S,D,T),punto_sorvegliato(S,D,T)).
 % da una sentinella ad un certo tempo.
 meta(punto_sorvegliato(_,_,_)).
 
+pred strategia_assunzioni(strat_assunzioni).
+%%	strategia_assunzioni(-S) DET
+%%	Spec: vero sse S e' la strategia attualmente adottata
+%	dall'agente per le assunzioni
+:-dynamic(strategia_assunzioni/1).
+strategia_assunzioni(risk). % valore di default
+
+pred set_strategia_assunzioni(strat_assunzioni).
+%%	set_strategia_assunzioni(++S) DET
+%%	Spec: imposta la strategia per le assunzioni
+set_strategia_assunzioni(S) :-
+	member(S,[risk,caution]),
+	retractall(strategia_assunzioni(_)),
+	assert(strategia_assunzioni(S)).
+
 %  decide_se_assumere è specificata in vai_if.pl; quando l'agente
 %  deve fare una assunzione, può decidere di non farla e fallire se
 %  vi sono motivi in contrario
 %  L'agente assume sempre che ogni sentinella, nell'immediato futuro,
 %  estendera' la propria area di influenza nella direzione in cui sta
 %  guardando.
+%  Assunzioni in modalita' risk
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	strategia_assunzioni(risk),
+	libera(P),
+	stato_sentinella(S,Psent,e), !,
+	area_sentinella(Psent,e,area(p(I1,J1),p(I2,J2))),
+	J1nuovo is J1 + 1,
+	J2nuovo is J2 + 1,
+	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
+	assert(assunto(punto_sorvegliato(S,P,T))).
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	strategia_assunzioni(risk),
+	libera(P),
+	stato_sentinella(S,Psent,o), !,
+	area_sentinella(Psent,o,area(p(I1,J1),p(I2,J2))),
+	J1nuovo is J1 - 1,
+	J2nuovo is J2 - 1,
+	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
+	assert(assunto(punto_sorvegliato(S,P,T))).
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	strategia_assunzioni(risk),
+	libera(P),
+	stato_sentinella(S,Psent,n), !,
+	area_sentinella(Psent,n,area(p(I1,J1),p(I2,J2))),
+	I1nuovo is I1 - 1,
+	I2nuovo is I2 - 1,
+	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
+	assert(assunto(punto_sorvegliato(S,P,T))).
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	strategia_assunzioni(risk),
+	libera(P),
+	stato_sentinella(S,Psent,s), !,
+	area_sentinella(Psent,s,area(p(I1,J1),p(I2,J2))),
+	I1nuovo is I1 + 1,
+	I2nuovo is I2 + 1,
+	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
+	assert(assunto(punto_sorvegliato(S,P,T))).
+
+% Assunzioni in modalita' caution
+decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	strategia_assunzioni(caution),
 	clock(Ora),
 	Diff is T - Ora,
 	(Diff > 3 -> M is 3; M is Diff),
@@ -381,6 +436,7 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	strategia_assunzioni(caution),
 	libera(P),
 	clock(Ora),
 	Diff is T - Ora,
@@ -391,6 +447,7 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	punto_area(P,area(p(I1,J1),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	strategia_assunzioni(caution),
 	libera(P),
 	clock(Ora),
 	Diff is T - Ora,
@@ -401,6 +458,7 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	punto_area(P,area(p(I1nuovo,J1),p(I2,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
+	strategia_assunzioni(caution),
 	libera(P),
 	clock(Ora),
 	Diff is T - Ora,
