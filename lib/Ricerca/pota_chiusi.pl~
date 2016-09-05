@@ -25,17 +25,17 @@ chiudi(N) :-
 %%	NUOVA VERSIONE DA MIGLIORARE
 
 %chiusura(nc(V,_,_),L,[V|L]).
-/*chiusura(nc(V,_,_),A,B) :-
+chiusura(nc(V,_,_),A,B) :-
 	put_assoc(V,A,n,B).
 
 potatura(nc(V,_Path,_),Chiusi,dl(L,L)) :-
 	get_assoc(V,Chiusi,_),!.
-potatura(N,_,dl([N|L],L)).*/
+potatura(N,_,dl([N|L],L)).
 
-chiusura(nc(V,_,_),_A,_B) :-
+/*chiusura(nc(V,_,_),_A,_B) :-
 	not(chiuso(V)) -> assert(chiuso(V)); true.
 
 potatura(nc(V,_Path,_),_Chiusi,dl(L,L)) :-
 	chiuso(V),!.
-potatura(N,_,dl([N|L],L)).
+potatura(N,_,dl([N|L],L)).*/
 

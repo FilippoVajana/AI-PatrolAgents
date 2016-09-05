@@ -97,10 +97,10 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	% creo una coda in cui salvare i messaggi di attesa (relativi al tasto 'Next' della GUI)
 	message_queue_create(next_move_queue),
 	% creo la finestra e la popolo
-	new(@p, dialog('Agente Stealth', size(W,L))),
-	map_refresh(@p),
+	% new(@p, dialog('Agente Stealth', size(W,L))),
+	% map_refresh(@p),
 	% apro la finestra
-	send(@p,open),
+	% send(@p,open),
 	%send(@p, modal, transient),
 	(   ultima(I) ->
 	    writeln('CONTINUAZIONE SU ':mappa(I))
@@ -193,8 +193,16 @@ libera(P) :-
 
 % 1) ho deciso di cercare un piano per andare da P a G, lo cerco
 piano(_ST, _Storia, vado(P,G), Piano):-
-	cerca_un_piano(P, G, Piano).
+	clock(Ora),
+	cerca_un_piano(passo(P,Ora), passo(G,_), Piano).
 piano(_ST, _Storia, attesa, [aspetto,aspetto,aspetto]).
+
+pred marcati(list(punto)).
+%%	marcati(?L) DET
+%%	Spec: contiene la lista dei nodi espansi (necessaria perche'
+%	l'introduzione del tempo rende complessa la potatura dell'albero
+%	di ricerca
+:-dynamic(marcati/1).
 
 pred cerca_un_piano(punto,punto, list(decisione)).
 %  cerca_un_piano(+P, +G, -Piano) semidet
@@ -210,10 +218,12 @@ cerca_un_piano(P, G, Piano) :-
 	retractall(current_goal(_)),
 	assert(current_goal(G)),
 	%   USO solve imlementato nel modulo ricerca mr.pl
+	assert(marcati([])),
 	solve(P, Sol, =(G)),
+	retractall(marcati(_)),
 	estrai_piano(Sol,Piano).
 
-type [nc(punto,list(punto),number)]:nodo.
+type [nc(passo(punto,tempo),list(punto),number)]:nodo.
 %  importo il tipo nc di search_spec.pl
 pred estrai_piano(nodo, list(decisione)).
 %  estrai_piano(+Sol, -Piano) det
@@ -223,14 +233,13 @@ estrai_piano(nc(G,RevPath,_C), Piano) :-
 	% faccio la reverse perch� il path � dal
 	% nodo alla radice e quindi in senso inverso
 	reverse([G|RevPath], [_Start|Path]),
-	clock(T),
-	path2moves(Path, Piano, T).
+	path2moves(Path, Piano).
 
-pred path2moves(list(punto), list(decisione),tempo).
-path2moves([P|Path],[avanzo(P,T)|MovList],T) :-
-	Tnext is T + 1,
-	path2moves(Path,MovList,Tnext).
-path2moves([],[],_).
+pred path2moves(list(punto), list(decisione)).
+path2moves([passo(P,T)|Path],[avanzo(P,T0)|MovList]) :-
+	T0 is T - 1,
+	path2moves(Path,MovList).
+path2moves([],[]).
 
 
 /*****  D1.  APPLICAZIONE DI A* e del ragionamento basato su
@@ -244,13 +253,15 @@ path2moves([],[],_).
 *************************************************************/
 
 %  implemento vicini, richiesto dall'interfaccia search_if
-vicini(P, V) :-
-	tempo_di_percorrenza(P,T),
-	setof(P1, pensa_sicuro(P, P1, T), V),
+vicini(P, ListaVicini) :-
+	P = passo(Pos,_),
+	retract(marcati(L)),
+	assert(marcati([Pos|L])),
+	setof(P1, pensa_sicuro(P, P1), ListaVicini),
 	!
 	;
-	V=[].
-
+	ListaVicini=[].
+/*
 pred tempo_di_percorrenza(punto,tempo).
 %%	tempo_di_percorrenza(+P,-T) DET
 %%	Spec: vero sse T e' il tempo che l'agente ipotizza impieghera' a
@@ -262,24 +273,27 @@ tempo_di_percorrenza(P,T) :-
 	T is T0 + M.
 manhattan(p(I1,J1),p(I2,J2),M) :-
 	M is abs(I1 - I2) + abs(J1 - J2).
+*/
 
 pred pensa_sicuro(punto,punto,tempo).
 %  pensa_sicuro(+P1, -P2) nondet
-%  P2 � raggiunibile da P1 ed e' un punto sicuro in base a quanto assume
-%  l'agente nello stato di conoscenza attuale
-pensa_sicuro(P1,P2,T) :-
+%  P2 e' raggiunibile da P1 ed e' un punto sicuro in base a quanto
+%  assume l'agente nello stato di conoscenza attuale
+pensa_sicuro(passo(P1,T1),passo(P2,T2)) :-
 	adiacenti(P1,ListaAdiacenti),
 	member(P2,ListaAdiacenti),
 	libera(P2),
-	T1 is T + 1,
-	not(pensa_avvistato(_,P2,T1)).
+	marcati(Espansi),
+	not(member(P2,Espansi)),
+	T2 is T1 + 1,
+	not(pensa_avvistato(_,P2,T2)).
 
 pred pensa_avvistato(id_sentinella,punto,tempo).
 %%	pensa_avvistato(?S,?P,?T) SEMIDET
 %%	Spec: vero sse l'agente pensa di essere avvistato da S nel punto
 %	P al tempo T
-pensa_avvistato(S,P,T) :-
-	setof(Sent,(member(Sent,[s1,s2,s3,s4]),pensa(punto_sorvegliato(Sent,P,T),_)),ListaSorvegliati),
+pensa_avvistato(_S,P,T) :-
+	setof(Sent,(stato_sentinella(Sent,_,_),pensa(punto_sorvegliato(Sent,P,T),_)),ListaSorvegliati),
   length(ListaSorvegliati,L),
   L >= 1.
 
@@ -287,9 +301,10 @@ pensa_avvistato(S,P,T) :-
 costo(P1,P2, 1) :-
 	P1 \== P2.
 % implemento l'euristica usando la distanza euclidea
-h(P,H) :-
-	current_goal(G),
-	distanza_euclidea(P,G,H).
+h(passo(P,T),H) :-
+	current_goal(passo(G,_)),
+	distanza_euclidea(P,G,H1),
+	H is H1 + T.
 
 
 
@@ -390,13 +405,21 @@ set_strategia_assunzioni(S) :-
 %  estendera' la propria area di influenza nella direzione in cui sta
 %  guardando.
 %  Assunzioni in modalita' risk
+mappa_ronda(4,3) :- !.
+mappa_ronda(5,2) :- !.
+mappa_ronda(6,1) :- !.
+mappa_ronda(I,I).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	strategia_assunzioni(risk),
 	libera(P),
 	stato_sentinella(S,Psent,e), !,
 	area_sentinella(Psent,e,area(p(I1,J1),p(I2,J2))),
-	J1nuovo is J1 + 1,
-	J2nuovo is J2 + 1,
+	clock(Ora),
+	Diff is T - Ora,
+	Spostamento is Diff mod 7,
+	mappa_ronda(Spostamento,S1),
+	J1nuovo is J1 + S1,
+	J2nuovo is J2 + S1,
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
@@ -404,8 +427,12 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,o), !,
 	area_sentinella(Psent,o,area(p(I1,J1),p(I2,J2))),
-	J1nuovo is J1 - 1,
-	J2nuovo is J2 - 1,
+	clock(Ora),
+	Diff is T - Ora,
+	Spostamento is Diff mod 7,
+	mappa_ronda(Spostamento,S1),
+	J1nuovo is J1 - S1,
+	J2nuovo is J2 - S1,
 	punto_area(P,area(p(I1,J1nuovo),p(I2,J2nuovo))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
@@ -413,8 +440,12 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,n), !,
 	area_sentinella(Psent,n,area(p(I1,J1),p(I2,J2))),
-	I1nuovo is I1 - 1,
-	I2nuovo is I2 - 1,
+	clock(Ora),
+	Diff is T - Ora,
+	Spostamento is Diff mod 7,
+	mappa_ronda(Spostamento,S1),
+	I1nuovo is I1 - S1,
+	I2nuovo is I2 - S1,
 	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
@@ -422,10 +453,15 @@ decide_se_assumere(punto_sorvegliato(S,P,T)) :-
 	libera(P),
 	stato_sentinella(S,Psent,s), !,
 	area_sentinella(Psent,s,area(p(I1,J1),p(I2,J2))),
-	I1nuovo is I1 + 1,
-	I2nuovo is I2 + 1,
+	clock(Ora),
+	Diff is T - Ora,
+	Spostamento is Diff mod 7,
+	mappa_ronda(Spostamento,S1),
+	I1nuovo is I1 + S1,
+	I2nuovo is I2 + S1,
 	punto_area(P,area(p(I1nuovo,J1),p(I2nuovo,J2))),
 	assert(assunto(punto_sorvegliato(S,P,T))).
+
 
 % Assunzioni in modalita' caution
 decide_se_assumere(punto_sorvegliato(S,P,T)) :-
@@ -496,5 +532,5 @@ mostra_conoscenza :-
 	%  riscrivo mostra_conoscenza di default, forendo
 	%  una rappresentazione grafica della conoscenza;
 	%  uso mostra_mappa definita in livello.pl
-	map_refresh(@p),
+	% map_refresh(@p),
 	mostra_mappa(mappa_agente).

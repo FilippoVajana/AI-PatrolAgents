@@ -197,8 +197,11 @@ mostra_fine(ST,Decisione, Storia) :-
        catch(stop(ST,Decisione,Storia),_, d_stop(ST,Decisione, Storia)).
 
 ask(Msg) :-
-	atomic_concat(Msg,': ',_P),
-	thread_get_message(next_move_queue,next_move).
+	atomic_concat(Msg,': ',P),
+	prompt1(P),
+	readln(R),
+	command(R).
+	% thread_get_message(next_move_queue,next_move).
 
 ask :-
 	nb_getval(debug_c,C),

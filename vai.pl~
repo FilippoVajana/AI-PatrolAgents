@@ -198,7 +198,6 @@ mostra_fine(ST,Decisione, Storia) :-
 
 ask(Msg) :-
 	atomic_concat(Msg,': ',_P),
-	send(@p,update),
 	thread_get_message(next_move_queue,next_move).
 
 ask :-
