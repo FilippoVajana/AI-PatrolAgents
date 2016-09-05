@@ -82,7 +82,7 @@ clear_knowledge :-
 
 stato_iniziale(st(P0,G,T), mappa(I)) :-
 	strategy(astar),
-	strategy(pota_chiusi),
+	strategy(taglio_cicli_custom),
 	azzera_clock,
 	clock(T),
 	carica_mappa(I),
@@ -97,11 +97,10 @@ stato_iniziale(st(P0,G,T), mappa(I)) :-
 	% creo una coda in cui salvare i messaggi di attesa (relativi al tasto 'Next' della GUI)
 	message_queue_create(next_move_queue),
 	% creo la finestra e la popolo
-	% new(@p, dialog('Agente Stealth', size(W,L))),
-	% map_refresh(@p),
+	new(@p, dialog('Agente Solid Snake F.TAV', size(W,L))),
+	map_refresh(@p),
 	% apro la finestra
-	% send(@p,open),
-	%send(@p, modal, transient),
+	send(@p,open),
 	(   ultima(I) ->
 	    writeln('CONTINUAZIONE SU ':mappa(I))
 	;   retractall(ultima(_)),
@@ -218,9 +217,7 @@ cerca_un_piano(P, G, Piano) :-
 	retractall(current_goal(_)),
 	assert(current_goal(G)),
 	%   USO solve imlementato nel modulo ricerca mr.pl
-	assert(marcati([])),
 	solve(P, Sol, =(G)),
-	retractall(marcati(_)),
 	estrai_piano(Sol,Piano).
 
 type [nc(passo(punto,tempo),list(punto),number)]:nodo.
@@ -254,26 +251,10 @@ path2moves([],[]).
 
 %  implemento vicini, richiesto dall'interfaccia search_if
 vicini(P, ListaVicini) :-
-	P == passo(Pos,_),
-	retract(marcati(L)),
-	assert(marcati([Pos|L])),
 	setof(P1, pensa_sicuro(P, P1), ListaVicini),
 	!
 	;
 	ListaVicini=[].
-/*
-pred tempo_di_percorrenza(punto,tempo).
-%%	tempo_di_percorrenza(+P,-T) DET
-%%	Spec: vero sse T e' il tempo che l'agente ipotizza impieghera' a
-%	percorrere la distanza che lo separa da P
-tempo_di_percorrenza(P,T) :-
-	position(P0),
-	manhattan(P,P0,M),
-	clock(T0),
-	T is T0 + M.
-manhattan(p(I1,J1),p(I2,J2),M) :-
-	M is abs(I1 - I2) + abs(J1 - J2).
-*/
 
 pred pensa_sicuro(punto,punto,tempo).
 %  pensa_sicuro(+P1, -P2) nondet
@@ -283,8 +264,6 @@ pensa_sicuro(passo(P1,T1),passo(P2,T2)) :-
 	adiacenti(P1,ListaAdiacenti),
 	member(P2,ListaAdiacenti),
 	libera(P2),
-	marcati(Espansi),
-	not(member(P2,Espansi)),
 	T2 is T1 + 1,
 	not(pensa_avvistato(_,P2,T2)).
 
@@ -532,5 +511,5 @@ mostra_conoscenza :-
 	%  riscrivo mostra_conoscenza di default, forendo
 	%  una rappresentazione grafica della conoscenza;
 	%  uso mostra_mappa definita in livello.pl
-	% map_refresh(@p),
+	map_refresh(@p),
 	mostra_mappa(mappa_agente).

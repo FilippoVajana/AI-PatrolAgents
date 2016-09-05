@@ -22,7 +22,7 @@ ignored(cerca(_, _, _, _)).
 '*****************************************************************************
 STRATEGIE RICERCA DISPONIBILI:
     profondita, ampiezza, astar, costo_minimo, best_first,
-    [taglio_cicli, taglio_cicli_custom],
+    [taglio_cicli, <strategia>],
     [pota_chiusi, <strategia>]'
 ),
 writeln('search_help.  per help\n
@@ -35,7 +35,7 @@ search_help :- maplist(writeln,[
 '*****************************************************************************
 STRATEGIE RICERCA DISPONIBILI:
     profondita, ampiezza, astar, costo_minimo, best_first,
-    [taglio_cicli, taglio_cicli_custom],
+    [taglio_cicli, <strategia>],
     [pota_chiusi, <strategia>]'
 ,
 'comandi:

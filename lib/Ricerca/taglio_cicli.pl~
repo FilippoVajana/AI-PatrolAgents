@@ -23,25 +23,15 @@ in(N,[_|L]) :-
 chiudi(_).   %  non chiude i nodi
 chiusura(_,_,_).
 
-potatura(nc(V,Path,_),_,dl(L,L)) :-
-	member(V,Path),!.
+potatura(nc(passo(V,_T),Path,_),_,dl(L,L)) :-
+	setof(E,(member(passo(E,_),Path)),ListaVisitati),
+	member(V,ListaVisitati),!.
 potatura(N,_,dl([N|L],L)).
 
 /************************** DA ADATTARE AL PROBLEMA **********/
 
 starting.
 
-equals(X,Y) :- X = Y.
-
-
-
-
-
-
-
-
-
-
-
+equals(passo(P,_T1),passo(P,_T2)).
 
 
