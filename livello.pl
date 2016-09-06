@@ -122,17 +122,17 @@ ambiente(1, [
 'oooooooooo']).
 
 ambiente(2, [
-'oooooooooo',
-'o   x    o',
-'o        o',
-'o        o',
-'o        o',
-'o        o',
-'o        o',
-'o oooooooo',
-'o        o',
-'o      p o',
-'oooooooooo']).
+'ooooooooooo',
+'ox        o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o         o',
+'o ooooooooo',
+'o         o',
+'o       p o',
+'ooooooooooo']).
 
 %%	per testare non determinismo
 ambiente(3,[

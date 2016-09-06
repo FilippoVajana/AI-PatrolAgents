@@ -50,7 +50,7 @@ pred ronda(id_ronda,punto,punto_cardinale,tempo).
 %%	Spec: vero sse la ronda R, al tempo T, prevede che la sentinella
 %	si trovi in posizione P e direzione D.
 
-pred ronda_corrente(list(atom)).
+pred ronda_corrente(any).
 %%	ronda_corrente(--FileName) DET
 %%	Spec: contiene il filename del set di ronde attualmente caricato
 :- dynamic(ronda_corrente/1).
@@ -70,7 +70,7 @@ carica_ronda(I) :-
 	retractall(ronda_corrente(_)),
 	assert(ronda_corrente(File)).
 
-pred nomi_ronde(number,list(atom)).
+pred nomi_ronde(number,any).
 %%	nomi_ronde(?I,?File) DET
 %%	Spec: mappa i numeri dei set di ronde sui rispettivi filename.
 nomi_ronde(1,'ronde_1').
@@ -86,15 +86,13 @@ pred area_sentinella(punto, punto_cardinale, area).
   % area_sentinella(+P,+D,-A) nondet
   % ritorna l'area coperta dalla sentinella nel punto P che guarda verso il punto cardinale D
 
-pred area_sentinella(punto, direzione, area).
+% pred area_sentinella(punto, direzione, area).
   % area_sentinella(+S,+D,-A) DET
   % ritorna l'area coperta dalla sentinella S che guarda verso la direzione D
-
-%% PREDICATI RELATIVI A SENTINELLA  %%
-
+/*
 area_sentinella(P,Dir,A) :-
-	direzioni(PC,Dir),
-	area_sentinella(P,PC,A).
+	direzioni(PC,Dir),!,
+	area_sentinella(P,PC,A). */
 area_sentinella(p(I,J),n,area(p(I1,J1),p(I2,J2))) :-
 	I1 is I - 3,
 	J1 is J + 1,

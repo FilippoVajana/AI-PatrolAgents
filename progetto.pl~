@@ -58,7 +58,7 @@ gen [vado(punto, punto),
      termino(evento)
     ]: decisione.
 
-gen [map(punto, terreno)]: assumibile.
+gen [punto_sorvegliato(id_sentinella,punto,number)]: assumibile.
 
 type [risk, caution]: strat_assunzioni.
 % tipo che identifica le strategie di assunzioni
@@ -194,7 +194,7 @@ libera(P) :-
 pred punto_sorvegliato(id_sentinella,punto,tempo).
 %%	punto_sorvegliato(?S,?P,?T) SEMIDET
 %%	Spec: vero sse l'agente pensa che P sia sorvegliato da S nel
-%	tempo T.
+%	tempo T
 
 % 1) ho deciso di cercare un piano per andare da P a G, lo cerco
 piano(_ST, _Storia, vado(P,G), Piano):-
@@ -214,10 +214,10 @@ pred cerca_un_piano(n, n, list(decisione)).
 %  FALLISCE se non ci sono piani, nel qual caso l'agente sa che il goal
 %  non � raggiungibile indipendentemente da ci� che ancora non conosce
 :- dynamic(current_goal/1).
-pred current_goal(punto).
+pred current_goal(n).
 cerca_un_piano(P, G, Piano) :-
 	%  RICORDO IL GOAL DI QUESTO PIANO PER USARLO
-	%  NELLA EURISTICA che usa la distanza quadretti da G
+	%  NELLA EURISTICA che usa la distanza euclidea da G
 	retractall(current_goal(_)),
 	assert(current_goal(G)),
 	%   USO solve imlementato nel modulo ricerca mr.pl
@@ -295,14 +295,12 @@ h(passo(P,T),H) :-
 /******************  E)  PARTE DI RAGIONAMENTO  *******************/
 
 %%	predicato usato nell'aggiornamento della conoscenza
-pred impara_punti_sorvegliati(tempo).
+pred impara_punti_sorvegliati(number).
 %%	impara_punti_sorvegliati(+T) DET
 %%	Spec: impara quali punti sono sorvegliati al tempo T
 impara_punti_sorvegliati(T) :-
 	forall(stato_sentinella(S,_,_),(estrai_punti_area(S,L),
-					forall(member(Pa,L),(
-						   not(conosce(punto_sorvegliato(S,Pa,T))) ->
-						   impara(punto_sorvegliato(S,Pa,T)))))).
+					forall(member(Pa,L),impara(punto_sorvegliato(S,Pa,T))))).
 
 %   aggiorna_conoscenza e' specificata in vai_if.pl
 %   avviene a fronte di un evento verificatosi
@@ -324,11 +322,11 @@ aggiorna_conoscenza(st(_P,_G,_T), _H, transizione(_S1,_A,_S2)) :-
 	impara_punti_sorvegliati(T),
 	!.
 
-%   3) evento fallita(vado(_,_),[_]) oppure fallita(attesa,[_]). Mentre
-%   l'agente si spostava o aspettava, e' stato avvistato. L'agente
+%   3) evento fallita(vado(_,_),[avanzo(Dest,_)|_]). Mentre
+%   l'agente si spostava, e' stato avvistato. L'agente
 %   dunque memorizza la posizione in cui e' stato avvistato, in modo da
 %   ricordarsene durante la prossima esecuzione.
-aggiorna_conoscenza(st(_P,_G,_T), _H, fallita(_,[_])) :-
+aggiorna_conoscenza(st(_P,G,_T), _H, fallita(vado(_,G),[avanzo(Dest,_)|_])) :-
 	clock(T),
 	Tnext is T + 1,
 	soldato_avvistato(S,Dest,Tnext),
