@@ -9,14 +9,21 @@ pred dimensioni_finestra(integer,integer,integer,integer).
 %%	dimensioni_finestra(+R,+C,-W,-L) DET
 %%	Spec: riceve le dimensioni in caselle e le restituisce in pixel
 
-dimensioni_finestra(R,C,X,Y):-
-	X is C * 48,
-	Y is R * 48.
-
 pred get_sprite(punto, sprite_type).
 %%	get_sprite(+P,-S) DET
 %%	Spec: dato un punto della mappa, restituisce un atomo
 %	corrispondente al tipo di sprite da disegnare nella finestra.
+
+pred map_refresh(picture).
+%%	map_refresh(++Picture) DET
+%%	Spec: aggiorna la finestra
+
+
+dimensioni_finestra(R,C,X,Y):-
+	X is C * 48,
+	Y is R * 48.
+
+
 get_sprite(P,'sprites/player.bmp') :-
 	position(P), !.
 get_sprite(P,'sprites/prisoner.bmp') :-
@@ -42,9 +49,7 @@ get_sprite(P, 'sprites/patrolled.bmp') :-
 get_sprite(P, 'sprites/grass.bmp') :-
 	map(P, ' ').
 
-pred map_refresh(picture).
-%%	map_refresh(++Picture) DET
-%%	Spec: aggiorna la finestra
+
 map_refresh(Finestra) :-
 	map_size(Size),
 	setof(sprite(P,SpriteType), (punto_mappa(P,Size), get_sprite(P,SpriteType)), ListaSprite),
