@@ -3,7 +3,7 @@
 		   azzera_clock/0]).
 :- use_module('lib/is_a').
 
-type [{number}]: tempo.
+type [{integer}]: tempo.
 
 pred clock(tempo).
 	%predicato dinamico che identifica l'istante temporale della simulazione
